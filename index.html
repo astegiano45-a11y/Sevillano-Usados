@@ -1,1414 +1,527 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sevillano Usados — Content OS</title>
-<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sevillano Content OS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
 <style>
-  body { margin: 0; padding: 16px; background: #E7EAF0; font-family: 'Inter', sans-serif; }
-  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
-
-  #su-os {
-    --navy: #0B2A55;
-    --navy-deep: #071C3B;
-    --steel: #8C96A6;
-    --steel-light: #EDF0F4;
-    --amber: #E29A2E;
-    --amber-deep: #C77F17;
-    --amber-light: #FCE9CD;
-    --paper: #F6F7FA;
-    --ink: #16202E;
-    --ink-soft: #5B6472;
-    --green: #2E9E68;
-    --green-light: #DBF0E4;
-    --blue-light: #D9E6FB;
-    --red: #C24C3F;
-    --line: #DCE1E8;
-
-    font-family: 'Inter', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    max-width: 100%;
-    position: relative;
-  }
-  #su-os * { box-sizing: border-box; }
-
-  .su-header {
-    background: linear-gradient(135deg, var(--navy-deep), var(--navy) 65%);
-    padding: 26px 28px 20px;
-    position: relative;
-    overflow: hidden;
-  }
-  .su-header::after {
-    content: "";
-    position: absolute; right: -40px; top: -60px;
-    width: 220px; height: 220px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(226,154,46,0.18), transparent 70%);
-  }
-  .su-top-row { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; }
-  .su-badge {
-    width: 44px; height: 44px; border-radius: 50%; background: var(--paper);
-    border: 3px solid var(--amber); display: flex; align-items: center; justify-content: center;
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 16px;
-    color: var(--navy-deep); flex-shrink: 0;
-  }
-  .su-title-block h1 {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 24px;
-    letter-spacing: 0.5px; color: #fff; margin: 0; text-transform: uppercase;
-  }
-  .su-title-block p { margin: 2px 0 0; font-size: 12px; color: #B9C5D6; letter-spacing: 0.3px; }
-  .su-plate {
-    margin-left: auto; background: var(--paper); border: 2px solid var(--navy-deep); border-radius: 6px;
-    padding: 5px 11px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
-    color: var(--navy-deep); letter-spacing: 1px; white-space: nowrap;
-  }
-
-  .su-tabs { display: flex; gap: 4px; padding: 12px 24px 0; background: var(--navy-deep); position: relative; z-index: 1; }
-  .su-tab {
-    font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px; color: #93A2B9;
-    background: transparent; border: none; padding: 9px 15px; cursor: pointer; border-radius: 8px 8px 0 0;
-    transition: all 0.15s ease;
-  }
-  .su-tab:hover { color: #E5EAF1; }
-  .su-tab.active { background: var(--paper); color: var(--navy-deep); }
-
-  .su-body { padding: 22px 24px 26px; }
-  .su-panel { display: none; }
-  .su-panel.active { display: block; animation: suFade .2s ease; }
-  @keyframes suFade { from { opacity: 0; transform: translateY(3px);} to { opacity:1; transform: translateY(0);} }
-
-  .su-section-label {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--amber-deep); margin: 0 0 6px;
-  }
-  .su-h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: var(--navy-deep); margin: 0 0 12px; }
-
-  .su-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
-
-  /* Editable elements */
-  [contenteditable="true"] {
-    outline: none; border-radius: 6px; padding: 2px 4px; margin: -2px -4px;
-    transition: background .12s ease;
-  }
-  [contenteditable="true"]:hover { background: rgba(226,154,46,0.08); }
-  [contenteditable="true"]:focus { background: #fff; box-shadow: 0 0 0 2px var(--amber); }
-  .su-edit-hint {
-    font-size: 10px; color: var(--steel); font-style: italic; margin-top: 8px;
-  }
-
-  .su-icon-btn {
-    background: transparent; border: none; cursor: pointer; color: var(--ink-soft);
-    font-size: 13px; padding: 4px 6px; border-radius: 6px;
-  }
-  .su-icon-btn:hover { background: var(--steel-light); color: var(--red); }
-
-  .su-add-btn {
-    display: inline-flex; align-items: center; gap: 6px; background: transparent;
-    border: 1.5px dashed var(--steel); color: var(--ink-soft); border-radius: 8px;
-    padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer; margin-top: 10px;
-  }
-  .su-add-btn:hover { border-color: var(--navy); color: var(--navy-deep); }
-
-  /* PLAN TAB */
-  .su-objetivo { background: linear-gradient(120deg, var(--navy-deep), var(--navy)); color: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; }
-  .su-objetivo .su-section-label { color: var(--amber); }
-  .su-objetivo [contenteditable] { font-size: 14px; line-height: 1.55; color: #E4E9F1; }
-  .su-objetivo [contenteditable]:hover { background: rgba(255,255,255,0.08); }
-  .su-objetivo [contenteditable]:focus { background: rgba(255,255,255,0.12); box-shadow: 0 0 0 2px var(--amber); color: #fff; }
-
-  .su-metas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
-  @media (max-width: 640px) { .su-metas { grid-template-columns: 1fr; } }
-  .su-meta { display: flex; gap: 10px; align-items: flex-start; position: relative; }
-  .su-meta-num {
-    font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 18px; color: var(--amber-deep);
-    background: var(--steel-light); width: 30px; height: 30px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .su-meta-body { flex: 1; }
-  .su-meta-body h3 { margin: 0 0 3px; font-size: 13.5px; color: var(--navy-deep); font-weight: 700; }
-  .su-meta-body p { margin: 0; font-size: 12.3px; color: var(--ink-soft); line-height: 1.4; }
-  .su-meta .su-icon-btn { position: absolute; top: -2px; right: -2px; }
-
-  .su-cadence-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-  .su-cadence-table th {
-    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
-    color: var(--ink-soft); font-weight: 600; padding: 7px 9px; border-bottom: 2px solid var(--line);
-  }
-  .su-cadence-table td { padding: 8px 9px; font-size: 12.8px; border-bottom: 1px solid var(--line); color: var(--ink); }
-  .su-cadence-table td:last-child { width: 26px; text-align: center; }
-
-  /* Dashboard */
-  .su-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  @media (max-width: 640px) { .su-stats-grid { grid-template-columns: 1fr 1fr; } }
-
-  .su-dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
-  @media (max-width: 640px) { .su-dash-grid { grid-template-columns: 1fr; } }
-
-  .su-today-item, .su-overdue-item {
-    display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12.5px;
-  }
-  .su-today-item:last-child, .su-overdue-item:last-child { border-bottom: none; }
-  .su-today-time { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--navy-deep); font-size: 11.5px; min-width: 40px; }
-  .su-empty-note { font-size: 12px; color: var(--ink-soft); font-style: italic; padding: 6px 0; }
-  .su-overdue-item { color: var(--red); font-weight: 600; }
-
-  .su-chart { display: flex; align-items: flex-end; gap: 10px; height: 140px; padding-top: 10px; }
-  .su-chart-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-  .su-chart-bar { width: 60%; background: linear-gradient(180deg, var(--amber), var(--navy)); border-radius: 5px 5px 0 0; min-height: 3px; transition: height .3s ease; }
-  .su-chart-num { font-size: 11px; font-weight: 700; color: var(--navy-deep); margin-bottom: 3px; }
-  .su-chart-label { font-size: 10px; color: var(--ink-soft); margin-top: 6px; text-transform: uppercase; }
-  .su-stat-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; position: relative; overflow: hidden; }
-  .su-stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--stat-color, var(--navy)); }
-  .su-stat-num { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 34px; color: var(--navy-deep); line-height: 1; }
-  .su-stat-label { font-size: 11.5px; color: var(--ink-soft); font-weight: 600; margin-top: 4px; }
-
-  /* Producción / Ideas tables */
-  .su-prod-table th, .su-ideas-table th { text-align: center; }
-  .su-prod-table td, .su-ideas-table td { text-align: center; vertical-align: middle; }
-  .su-prod-table td:first-child, .su-ideas-table td:first-child { text-align: left; }
-  .su-prod-table input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--green); cursor: pointer; }
-  .su-prod-table input[type="text"], .su-ideas-table input[type="text"], .su-ideas-table textarea {
-    width: 100%; font-family: 'Inter', sans-serif; font-size: 12.3px; color: var(--ink); border: 1px solid transparent;
-    border-radius: 6px; padding: 5px 6px; background: transparent;
-  }
-  .su-prod-table input[type="text"]:hover, .su-ideas-table input[type="text"]:hover, .su-ideas-table textarea:hover { background: var(--steel-light); }
-  .su-prod-table input[type="text"]:focus, .su-ideas-table input[type="text"]:focus, .su-ideas-table textarea:focus {
-    outline: none; border-color: var(--amber); background: #fff;
-  }
-  .su-ideas-table select {
-    width: 100%; font-family: 'Inter', sans-serif; font-size: 12px; color: var(--ink); border: 1px solid var(--line);
-    border-radius: 6px; padding: 5px 4px; background: #fff;
-  }
-  .su-prio-alta { color: var(--red); font-weight: 700; }
-  .su-prio-media { color: var(--amber-deep); font-weight: 700; }
-  .su-prio-baja { color: var(--ink-soft); font-weight: 700; }
-
-  .su-tone-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-  .su-tone-tag {
-    background: #fff; border: 1.5px solid var(--navy); color: var(--navy-deep); font-size: 12px; font-weight: 600;
-    padding: 5px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px;
-  }
-  .su-tone-tag button { background: none; border: none; color: var(--steel); cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
-  .su-tone-tag button:hover { color: var(--red); }
-  .su-tag-add {
-    background: var(--steel-light); border: 1.5px dashed var(--steel); color: var(--ink-soft); font-size: 12px;
-    padding: 5px 10px; border-radius: 20px; cursor: pointer;
-  }
-
-  /* PILARES TAB */
-  .su-pillars { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  @media (max-width: 640px) { .su-pillars { grid-template-columns: 1fr; } }
-  .su-pillar { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 15px 17px 15px 20px; position: relative; overflow: hidden; }
-  .su-pillar::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--pillar-color, var(--amber)); }
-  .su-pillar-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; gap: 8px; }
-  .su-pillar h3 {
-    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 16px; color: var(--navy-deep);
-    margin: 0; text-transform: uppercase; letter-spacing: 0.3px; flex: 1;
-  }
-  .su-pillar-pct-wrap { display: flex; align-items: center; gap: 6px; }
-  .su-pillar-pct { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12.5px; color: var(--pillar-color, var(--amber-deep)); width: 34px; text-align: right; }
-  .su-pillar p { font-size: 12.3px; color: var(--ink-soft); line-height: 1.5; margin: 0 0 8px; }
-  .su-pillar-formats { font-size: 11.5px; color: var(--navy-deep); font-weight: 600; }
-  .su-pillar-del { position: absolute; top: 8px; right: 8px; }
-
-  /* CALENDARIO TAB - MONTH VIEW */
-  .su-cal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-  .su-week-nav { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
-  .su-week-btn {
-    background: var(--navy-deep); color: #fff; border: none; width: 26px; height: 26px; border-radius: 6px;
-    cursor: pointer; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center;
-  }
-  .su-week-btn:hover { background: var(--navy); }
-  .su-week-label { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--navy-deep); min-width: 140px; text-align: center; text-transform: capitalize; }
-
-  .su-cal-actions { margin-left: auto; display: flex; gap: 8px; }
-  .su-gcal-btn {
-    display: flex; align-items: center; gap: 6px; background: var(--navy-deep); color: #fff; border: none;
-    border-radius: 8px; padding: 8px 13px; font-size: 12px; font-weight: 700; cursor: pointer;
-  }
-  .su-gcal-btn:hover { background: var(--navy); }
-  .su-gcal-btn.secondary { background: #fff; color: var(--navy-deep); border: 1.5px solid var(--navy); }
-  .su-gcal-btn.secondary:hover { background: var(--steel-light); }
-
-  .su-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-  .su-dow { text-align: center; font-size: 10.5px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; padding-bottom: 4px; }
-  .su-day-cell {
-    background: #fff; border: 1px solid var(--line); border-radius: 8px; min-height: 92px;
-    padding: 6px 6px 6px; display: flex; flex-direction: column; gap: 3px; position: relative;
-  }
-  .su-day-cell.su-outside { background: var(--paper); opacity: 0.5; }
-  .su-day-cell.su-today { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
-  .su-day-num-row { display: flex; justify-content: space-between; align-items: center; }
-  .su-day-num { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; color: var(--navy-deep); }
-  .su-day-add { background: none; border: none; color: var(--steel); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; }
-  .su-day-add:hover { color: var(--amber-deep); }
-  .su-event-chip {
-    font-size: 10px; font-weight: 600; padding: 2.5px 5px; border-radius: 5px; cursor: pointer;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.5;
-  }
-  .su-event-chip:hover { filter: brightness(0.95); }
-  .ev-idea { background: var(--steel-light); color: var(--ink-soft); }
-  .ev-grabado { background: var(--amber-light); color: var(--amber-deep); }
-  .ev-editado { background: var(--blue-light); color: var(--navy); }
-  .ev-publicado { background: var(--green-light); color: var(--green); }
-
-  @media (max-width: 640px) {
-    .su-month-grid { grid-template-columns: repeat(7, 1fr); gap: 3px; }
-    .su-day-cell { min-height: 60px; padding: 4px; }
-    .su-dow { font-size: 8.5px; }
-    .su-event-chip { font-size: 8.5px; }
-  }
-
-  /* Modal */
-  .su-modal-overlay {
-    position: absolute; inset: 0; background: rgba(7,28,59,0.55); display: none;
-    align-items: center; justify-content: center; z-index: 50; padding: 20px; border-radius: 14px;
-  }
-  .su-modal-overlay.open { display: flex; }
-  .su-modal {
-    background: #fff; border-radius: 12px; padding: 22px; width: 100%; max-width: 380px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-  }
-  .su-modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; color: var(--navy-deep); margin: 0 0 14px; text-transform: uppercase; }
-  .su-field { margin-bottom: 12px; }
-  .su-field label { display: block; font-size: 11px; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
-  .su-field input, .su-field select, .su-field textarea {
-    width: 100%; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--ink);
-    border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; background: #fff;
-  }
-  .su-field input:focus, .su-field select:focus, .su-field textarea:focus { outline: 2px solid var(--amber); border-color: var(--amber); }
-  .su-field textarea { min-height: 55px; resize: vertical; }
-  .su-modal-actions { display: flex; gap: 8px; margin-top: 16px; }
-  .su-btn { flex: 1; border: none; border-radius: 8px; padding: 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-  .su-btn-primary { background: var(--navy-deep); color: #fff; }
-  .su-btn-primary:hover { background: var(--navy); }
-  .su-btn-ghost { background: var(--steel-light); color: var(--ink-soft); }
-  .su-btn-ghost:hover { background: var(--line); }
-  .su-btn-danger { background: #fff; color: var(--red); border: 1.5px solid var(--red); flex: 0 0 auto; padding: 10px 14px; }
-  .su-btn-danger:hover { background: #FBEBE8; }
-
-  .su-save-status { font-size: 11px; color: var(--ink-soft); margin-top: 8px; text-align: right; min-height: 14px; }
-
-  .su-settings-btn { cursor: pointer; border: none; margin-left: 8px; }
-  .su-settings-btn:hover { background: var(--steel-light); }
-  .su-sync-status {
-    margin-top: 10px; font-size: 11px; color: #B9C5D6; position: relative; z-index: 1;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .su-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--steel); flex-shrink: 0; }
-  .su-sync-status.su-ok .su-sync-dot { background: var(--green); }
-  .su-sync-status.su-err .su-sync-dot { background: var(--red); }
-  .su-sync-status.su-busy .su-sync-dot { background: var(--amber); }
-
-  .su-settings-modal { max-width: 460px; }
-  .su-settings-modal ol { margin: 0 0 14px; padding-left: 18px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.7; }
-  .su-settings-modal code {
-    background: var(--steel-light); padding: 1px 5px; border-radius: 4px; font-size: 11.5px;
-    font-family: 'JetBrains Mono', monospace; color: var(--navy-deep);
-  }
-  .su-settings-modal a { color: var(--navy); }
-
-  /* Dark mode */
-  #su-os.su-dark {
-    --paper: #131A24; --ink: #E7EAF0; --ink-soft: #9AA6B5; --line: #2A3444;
-    --steel-light: #1E2733;
-  }
-  #su-os.su-dark .su-card, #su-os.su-dark .su-pillar, #su-os.su-dark .su-day-cell,
-  #su-os.su-dark .su-stat-card, #su-os.su-dark .su-modal { background: #1A2330; border-color: var(--line); }
-  #su-os.su-dark .su-tone-tag, #su-os.su-dark .su-field input, #su-os.su-dark .su-field select,
-  #su-os.su-dark .su-field textarea, #su-os.su-dark .su-prod-table input, #su-os.su-dark .su-ideas-table input,
-  #su-os.su-dark .su-ideas-table select { background: #1A2330; color: var(--ink); border-color: var(--line); }
-  #su-os.su-dark .su-day-cell.su-outside { background: #0F151E; }
-  #su-os.su-dark [contenteditable="true"]:focus { background: #1A2330; }
-
-  /* Print / export */
-  @media print {
-    body { background: #fff !important; }
-    #su-os { border: none !important; }
-    .su-header, .su-tabs, .su-add-btn, .su-icon-btn, .su-day-add, .su-modal-overlay,
-    .su-settings-btn, .su-save-status, .su-edit-hint { display: none !important; }
-    .su-panel { display: block !important; page-break-after: always; }
-    .su-body { padding: 0 !important; }
-  }
+/* Layout: barra superior de marca + tabs, vistas operativas en grilla; tarjetas codificadas por pilar */
+:root{
+  --bg:#F5F7FB; --surface:#FFFFFF; --fg:#0D1424; --muted:#5D6880; --line:#E2E7F0;
+  --accent:#0A57FF; --accent-soft:#E6EEFF; --navy:#0B1F4D;
+  --valor:#0A57FF; --valor-soft:#E6EEFF;
+  --exp:#0E9F6E; --exp-soft:#E1F5EC;
+  --prod:#F06A1A; --prod-soft:#FDEBDF;
+  --warn:#C2410C; --ok:#0E9F6E;
+  --f-display:"Archivo","Arial Black",system-ui,sans-serif;
+  --f-body:"Manrope",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A0F1C; --surface:#121A2C; --fg:#E8EDF7; --muted:#93A0BA; --line:#22304B;
+  --accent:#4D86FF; --accent-soft:#16264A; --navy:#E8EDF7;
+  --valor:#5B8FFF; --valor-soft:#16264A; --exp:#34C792; --exp-soft:#0F3026; --prod:#FF8A45; --prod-soft:#3A2214;
+  --warn:#FF8A45; --ok:#34C792; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0F1C; --surface:#121A2C; --fg:#E8EDF7; --muted:#93A0BA; --line:#22304B;
+  --accent:#4D86FF; --accent-soft:#16264A; --navy:#E8EDF7;
+  --valor:#5B8FFF; --valor-soft:#16264A; --exp:#34C792; --exp-soft:#0F3026; --prod:#FF8A45; --prod-soft:#3A2214;
+  --warn:#FF8A45; --ok:#34C792; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:12px;padding-block:14px;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:900;letter-spacing:.02em;font-size:18px;color:var(--navy);text-transform:uppercase}
+.brand small{display:block;font-family:var(--f-mono);font-weight:500;font-size:10px;letter-spacing:.18em;color:var(--accent)}
+.sync{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--ok)}
+nav{display:flex;gap:4px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
+nav button{border:0;background:none;font:600 14px var(--f-body);color:var(--muted);padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{background:var(--accent);color:#fff}
+nav button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:22px 60px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:clamp(22px,3vw,30px);font-weight:900}
+h2{font-size:18px;font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 13px var(--f-body);padding:8px 14px;border-radius:999px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.ghost{border-color:transparent;background:none}
+.btn.danger{color:var(--warn)}
+.sub{color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+/* pilares */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.02em}
+.p-valor{background:var(--valor-soft);color:var(--valor)}
+.p-exp{background:var(--exp-soft);color:var(--exp)}
+.p-prod{background:var(--prod-soft);color:var(--prod)}
+.p-none{background:var(--line);color:var(--muted)}
+.chip{font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);padding:2px 8px;border-radius:999px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+/* hoy */
+.today-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:18px}
+@media(max-width:860px){.today-grid{grid-template-columns:1fr}}
+.week{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:620px){.week{grid-template-columns:1fr}}
+.slot{border-radius:var(--r);padding:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:8px;min-width:0;cursor:pointer}
+.slot .day{font-family:var(--f-display);font-weight:900;font-size:22px}
+.slot.valor{border-top:4px solid var(--valor)} .slot.exp{border-top:4px solid var(--exp)} .slot.prod{border-top:4px solid var(--prod)}
+.slot .t{font-weight:700}
+.empty{color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:10px;padding:12px;text-align:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+@media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat .n{font-family:var(--f-display);font-weight:900;font-size:28px;font-variant-numeric:tabular-nums}
+.list{display:flex;flex-direction:column;gap:6px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.item:hover{border-color:var(--accent)}
+.item .when{font-family:var(--f-mono);font-size:11px;color:var(--muted);min-width:64px}
+.item .txt{flex:1;min-width:0}
+.item.done .t{text-decoration:line-through;color:var(--muted)}
+.check{width:20px;height:20px;border-radius:6px;border:2px solid var(--line);flex:none;cursor:pointer;background:none;padding:0}
+.check.on{background:var(--ok);border-color:var(--ok)}
+.kind{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.k-reunion{color:var(--accent)} .k-evento{color:var(--prod)} .k-tarea{color:var(--muted)}
+/* calendario */
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.cal-head div{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding-left:6px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px}
+.cell{min-height:118px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;min-width:0;position:relative}
+.cell.out{opacity:.45}
+.cell.pub{background:linear-gradient(var(--surface),var(--surface)) padding-box}
+.cell .num{font-family:var(--f-mono);font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.cell.today .num b{background:var(--accent);color:#fff;border-radius:6px;padding:0 6px}
+.cell .add{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;opacity:0}
+.cell:hover .add,.cell:focus-within .add{opacity:1}
+.ev{font-size:11.5px;font-weight:600;padding:3px 6px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev.valor{background:var(--valor-soft);color:var(--valor)} .ev.exp{background:var(--exp-soft);color:var(--exp)} .ev.prod{background:var(--prod-soft);color:var(--prod)}
+.ev.task{background:var(--bg);color:var(--fg);border:1px solid var(--line)}
+.ev.pubd{text-decoration:line-through;opacity:.7}
+.cell .tag{font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+@media(max-width:700px){.cal-head{display:none}.cal{grid-template-columns:1fr}.cell{min-height:auto}.cell.out{display:none}.cell .add{opacity:1}}
+.legend{display:flex;gap:8px;flex-wrap:wrap}
+/* kanban */
+.board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.col.over{border-color:var(--accent);background:var(--accent-soft)}
+.col h3{font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.col h3 span{font-family:var(--f-mono);color:var(--muted);font-weight:500}
+.kcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:grab;display:flex;flex-direction:column;gap:6px}
+.kcard.valor{border-left:4px solid var(--valor)} .kcard.exp{border-left:4px solid var(--exp)} .kcard.prod{border-left:4px solid var(--prod)}
+.kcard .meta{font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.mv{display:flex;gap:4px}
+.mv button{border:1px solid var(--line);background:none;border-radius:6px;font-size:12px;cursor:pointer;color:var(--muted);padding:1px 7px}
+/* ideas */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:999px;font:600 12px var(--f-body);padding:5px 12px;cursor:pointer;color:var(--fg)}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:14px}
+.idea{display:flex;flex-direction:column;gap:8px;cursor:pointer}
+.idea .hook{font-family:var(--f-display);font-weight:700;font-size:15px}
+.prio{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.prio.alta{color:var(--warn)}
+/* marca */
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+@media(max-width:860px){.pillars{grid-template-columns:1fr}}
+.pillar{border-top:5px solid}
+.pillar.valor{border-top-color:var(--valor)} .pillar.exp{border-top-color:var(--exp)} .pillar.prod{border-top-color:var(--prod)}
+.pillar .dayb{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ed{border-radius:6px;padding:2px 4px;margin:-2px -4px;outline:none}
+.ed:hover{background:var(--bg)}
+.ed:focus{background:var(--accent-soft)}
+ul.subs{padding-left:18px;margin:8px 0 0}
+/* modal */
+dialog{border:0;border-radius:16px;padding:0;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 40px);background:var(--surface);color:var(--fg);box-shadow:0 24px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(8,14,30,.5)}
+.mh{padding:18px 20px 0;display:flex;align-items:center;gap:10px}
+.mb{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mb .full{grid-column:1/-1}
+@media(max-width:520px){.mb{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--muted)}
+input,select,textarea{font:500 14px var(--f-body);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+textarea{min-height:80px;resize:vertical}
+.mf{padding:0 20px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;z-index:50}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:0;background:var(--surface);color:var(--muted);font:600 12px var(--f-body);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+@media(prefers-reduced-motion:no-preference){.kcard,.slot,.item{transition:border-color .15s,transform .15s}.kcard:hover{transform:translateY(-1px)}}
+body{margin:0}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
-
-<div id="su-os">
-  <div class="su-header">
-    <div class="su-top-row">
-      <div class="su-badge"><img src="data:image/jpeg;base64,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" alt="Sevillano Usados" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
-      <div class="su-title-block">
-        <h1>Sevillano Usados</h1>
-        <p>Content OS — todo editable, conectado a Google Calendar</p>
-      </div>
-      <div class="su-plate">CONTENT · OS</div>
-      <button class="su-plate su-settings-btn" id="su-theme-toggle" title="Modo oscuro/claro">🌙</button>
-      <button class="su-plate su-settings-btn" id="su-print-btn" title="Exportar / Imprimir">🖨</button>
-      <button class="su-plate su-settings-btn" id="su-settings-open" title="Configurar sincronización">⚙ Sincronización</button>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Sevillano Usados<small>Content OS</small></div>
+      <button class="sync btn ghost" id="syncBtn" type="button"><span class="dot" id="dot"></span><span id="syncTxt">Cargando…</span></button>
     </div>
-    <div class="su-sync-status" id="su-sync-status">Sin configurar — tocá "⚙ Sincronización" para conectar tu Google Sheet</div>
+    <nav role="tablist" id="tabs">
+      <button role="tab" data-v="hoy" aria-selected="true">Inicio</button>
+      <button role="tab" data-v="cal">Calendario</button>
+      <button role="tab" data-v="prod">Producción</button>
+      <button role="tab" data-v="ideas">Banco de ideas</button>
+      <button role="tab" data-v="marca">Marca</button>
+    </nav>
   </div>
+</header>
 
-  <div class="su-tabs">
-    <button class="su-tab active" data-panel="dashboard">Dashboard</button>
-    <button class="su-tab" data-panel="plan">Plan de Contenido</button>
-    <button class="su-tab" data-panel="pilares">Pilares</button>
-    <button class="su-tab" data-panel="calendario">Calendario</button>
-    <button class="su-tab" data-panel="produccion">Producción</button>
-    <button class="su-tab" data-panel="ideas">Banco de Ideas</button>
-  </div>
+<main class="wrap" id="main"></main>
 
-  <div class="su-body">
-
-    <!-- DASHBOARD -->
-    <div class="su-panel active" id="panel-dashboard">
-      <p class="su-h2">Resumen general</p>
-      <div class="su-stats-grid" id="su-stats-grid"></div>
-      <p class="su-edit-hint">Estos números se calculan solos a partir de lo que cargues en Calendario y Producción.</p>
-
-      <div class="su-dash-grid">
-        <div class="su-card">
-          <p class="su-section-label">Hoy</p>
-          <div id="su-today-list"></div>
-        </div>
-        <div class="su-card">
-          <p class="su-section-label">Vehículos atrasados (3+ días sin publicar)</p>
-          <div id="su-overdue-list"></div>
-        </div>
-      </div>
-
-      <p class="su-h2" style="margin-top:20px;">Publicaciones realizadas por mes</p>
-      <div class="su-card">
-        <div id="su-month-chart" class="su-chart"></div>
-      </div>
-    </div>
-
-    <!-- PLAN -->
-    <div class="su-panel" id="panel-plan">
-      <div class="su-objetivo">
-        <p class="su-section-label">Objetivo general</p>
-        <p id="su-objetivo-text" contenteditable="true" data-field="objetivo"></p>
-      </div>
-
-      <p class="su-h2">Metas del trimestre</p>
-      <div class="su-metas" id="su-metas-wrap"></div>
-      <button class="su-add-btn" id="su-add-meta">+ Agregar meta</button>
-
-      <p class="su-h2" style="margin-top:20px;">Frecuencia de publicación</p>
-      <div class="su-card">
-        <table class="su-cadence-table" id="su-freq-table">
-          <thead><tr><th>Formato</th><th>Red</th><th>Frecuencia</th><th></th></tr></thead>
-          <tbody id="su-freq-body"></tbody>
-        </table>
-        <button class="su-add-btn" id="su-add-freq">+ Agregar fila</button>
-      </div>
-
-      <p class="su-h2" style="margin-top:20px;">Tono de marca</p>
-      <div class="su-card">
-        <p contenteditable="true" id="su-tone-desc" data-field="toneDesc" style="font-size:13px; color:var(--ink-soft); margin:0 0 4px;"></p>
-        <div class="su-tone-tags" id="su-tone-tags"></div>
-      </div>
-      <p class="su-edit-hint">Hacé clic en cualquier texto para editarlo. Todo se guarda automáticamente.</p>
-    </div>
-
-    <!-- PILARES -->
-    <div class="su-panel" id="panel-pilares">
-      <p class="su-h2">Los pilares</p>
-      <div class="su-pillars" id="su-pillars-wrap"></div>
-      <button class="su-add-btn" id="su-add-pillar">+ Agregar pilar</button>
-    </div>
-
-    <!-- CALENDARIO -->
-    <div class="su-panel" id="panel-calendario">
-      <div class="su-cal-header">
-        <div class="su-week-nav">
-          <button class="su-week-btn" id="su-prev-month">‹</button>
-          <span class="su-week-label" id="su-month-label"></span>
-          <button class="su-week-btn" id="su-next-month">›</button>
-        </div>
-        <div class="su-cal-actions">
-          <button class="su-gcal-btn secondary" id="su-export-ics">⤓ Exportar mes a Google Calendar</button>
-        </div>
-      </div>
-
-      <div class="su-card" style="padding:12px;">
-        <div class="su-month-grid" id="su-month-grid"></div>
-      </div>
-
-      <p class="su-edit-hint">Tocá el "+" de un día para agregar una publicación. Cada evento se puede sumar directo a tu Google Calendar, o exportar el mes completo como archivo .ics para importarlo.</p>
-
-      <div class="su-save-status" id="su-save-status"></div>
-    </div>
-
-    <!-- PRODUCCIÓN -->
-    <div class="su-panel" id="panel-produccion">
-      <p class="su-h2">Producción por vehículo</p>
-      <div class="su-card" style="padding:12px; overflow-x:auto;">
-        <table class="su-cadence-table su-prod-table" id="su-prod-table">
-          <thead>
-            <tr>
-              <th style="min-width:150px;">Vehículo</th>
-              <th style="min-width:80px;">Días</th>
-              <th>Fotos</th><th>Video</th><th>Edición</th><th>Copy</th><th>Miniatura</th><th>Programado</th><th>Publicado</th>
-              <th style="min-width:140px;">Link</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="su-prod-body"></tbody>
-        </table>
-      </div>
-      <button class="su-add-btn" id="su-add-prod">+ Agregar vehículo</button>
-    </div>
-
-    <!-- BANCO DE IDEAS -->
-    <div class="su-panel" id="panel-ideas">
-      <p class="su-h2">Banco de ideas</p>
-      <div class="su-card" style="padding:12px; overflow-x:auto;">
-        <table class="su-cadence-table su-ideas-table" id="su-ideas-table">
-          <thead>
-            <tr>
-              <th style="min-width:160px;">Idea</th><th style="min-width:110px;">Pilar</th><th style="min-width:90px;">Formato</th>
-              <th style="min-width:150px;">Gancho</th><th style="min-width:120px;">CTA</th><th style="min-width:90px;">Prioridad</th>
-              <th style="min-width:100px;">Estado</th><th style="min-width:150px;">Notas</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="su-ideas-body"></tbody>
-        </table>
-      </div>
-      <button class="su-add-btn" id="su-add-idea">+ Agregar idea</button>
-    </div>
-
-  </div>
-
-  <div class="su-modal-overlay" id="su-modal-overlay">
-    <div class="su-modal">
-      <h3 id="su-modal-title">Nueva publicación</h3>
-      <div class="su-field">
-        <label>Título</label>
-        <input type="text" id="ev-title" placeholder="Ej: Chevrolet Onix 2021, bajo kilometraje">
-      </div>
-      <div class="su-field">
-        <label>Vehículo</label>
-        <input type="text" id="ev-vehiculo" placeholder="Ej: Corolla XEI 2022">
-      </div>
-      <div class="su-field">
-        <label>Pilar</label>
-        <select id="ev-pillar"></select>
-      </div>
-      <div class="su-field">
-        <label>Formato</label>
-        <select id="ev-format">
-          <option>Feed</option><option>Reel</option><option>Historia</option><option>WhatsApp</option>
-        </select>
-      </div>
-      <div class="su-field">
-        <label>Red social</label>
-        <select id="ev-red">
-          <option>Instagram</option><option>TikTok</option><option>WhatsApp</option><option>Facebook</option>
-        </select>
-      </div>
-      <div class="su-field">
-        <label>Responsable</label>
-        <input type="text" id="ev-responsable" placeholder="Ej: Franco">
-      </div>
-      <div class="su-field">
-        <label>Hora (opcional)</label>
-        <input type="time" id="ev-time">
-      </div>
-      <div class="su-field">
-        <label>Estado</label>
-        <select id="ev-status">
-          <option value="idea">Idea</option><option value="grabado">Grabado</option>
-          <option value="editado">Editado</option><option value="publicado">Publicado</option>
-        </select>
-      </div>
-      <div class="su-field">
-        <label>Observaciones</label>
-        <textarea id="ev-note" placeholder="Detalles de producción..."></textarea>
-      </div>
-      <div class="su-modal-actions">
-        <button class="su-btn su-btn-danger" id="ev-delete" style="display:none;">Eliminar</button>
-        <button class="su-btn su-btn-ghost" id="ev-cancel">Cancelar</button>
-        <button class="su-btn su-btn-primary" id="ev-save">Guardar</button>
-      </div>
-      <button class="su-gcal-btn" id="ev-gcal" style="width:100%; margin-top:10px; justify-content:center;">+ Agregar a Google Calendar</button>
-    </div>
-  </div>
-
-  <div class="su-modal-overlay" id="su-settings-overlay">
-    <div class="su-modal su-settings-modal">
-      <h3>Sincronizar con Google Sheets</h3>
-      <ol>
-        <li>Abrí <a href="https://sheets.new" target="_blank" rel="noopener">sheets.new</a> para crear una planilla nueva (podés llamarla "Sevillano Content OS").</li>
-        <li>Andá a <code>Extensiones → Apps Script</code>, borrá el contenido y pegá el código que te di.</li>
-        <li>Hacé clic en <code>Implementar → Nueva implementación</code>, elegí tipo <code>Aplicación web</code>.</li>
-        <li>En "Quién tiene acceso" elegí <code>Cualquier usuario</code> y hacé clic en <code>Implementar</code>. Autorizá los permisos.</li>
-        <li>Copiá la URL que termina en <code>/exec</code> y pegala acá abajo.</li>
-      </ol>
-      <div class="su-field">
-        <label>URL de la aplicación web (termina en /exec)</label>
-        <input type="text" id="su-gscript-url-input" placeholder="https://script.google.com/macros/s/.../exec">
-      </div>
-      <div class="su-modal-actions">
-        <button class="su-btn su-btn-ghost" id="su-settings-cancel">Cerrar</button>
-        <button class="su-btn su-btn-primary" id="su-settings-save">Guardar y conectar</button>
-      </div>
-    </div>
-  </div>
-</div>
+<dialog id="dlg"><form method="dialog" id="frm"></form></dialog>
+<div class="toast" id="toast" hidden></div>
 
 <script>
-(function() {
-  const root = document.getElementById('su-os');
+const PIL={
+  valor:{name:"Contenido de valor",short:"Valor",day:1,subs:["Consejos","Preguntas frecuentes","Mitos y verdades de la marca"]},
+  exp:{name:"Contenido de experiencia",short:"Experiencia",day:3,subs:["Eventos","Uso de las camionetas","Equipo de taller o vendedores","Entrega o atención al cliente"]},
+  prod:{name:"Contenido de producto",short:"Producto",day:5,subs:["Modelos","Funciones o accesorios","Comparativas","Financiación"]}
+};
+const ESTADOS=["Idea","Guion","Grabado","Editado","Publicado"];
+const FORMATOS=["Reel","Carrusel","Feed","Historia","WhatsApp"];
+const REDES=["Instagram","TikTok","Facebook","WhatsApp"];
+const DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
-  // ---------- Tabs ----------
-  const tabs = root.querySelectorAll('.su-tab');
-  const panels = root.querySelectorAll('.su-panel');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      panels.forEach(p => p.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
-    });
+const S={posts:[],tasks:[],ideas:[],brand:null};
+let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
+const DEF_BRAND={tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
+  metas:["3 publicaciones por semana (L/M/V)","Cada auto del stock publicado al menos una vez por mes","Responder consultas de WhatsApp en menos de 1 hora"],
+  subs:{valor:PIL.valor.subs,exp:PIL.exp.subs,prod:PIL.prod.subs},
+  desc:{valor:"Educa y genera confianza: lo que hay que saber antes de comprar un usado en Tierra del Fuego.",exp:"Muestra personas reales: clientes, equipo y lo que pasa en la agencia.",prod:"Vende: los autos, lo que traen y cómo se pagan."}};
+const brand=()=>Object.assign({},DEF_BRAND,S.brand||{});
+
+/* ---------- datos: copia local + Google Sheets ---------- */
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const local={get(k){try{return JSON.parse(localStorage.getItem("cos_"+k))}catch(e){return null}},set(k,v){try{localStorage.setItem("cos_"+k,JSON.stringify(v))}catch(e){}}};
+const SEED={posts:[
+ {id:"p1",title:"5 cosas que tenés que mirar en un usado",date:"2026-11-02",pilar:"valor",sub:"Consejos",formato:"Reel",red:"Instagram",estado:"Guion",descripcion:"Reel educativo: cómo revisar un usado antes de comprarlo.",gancho:"Antes de comprar un usado en Río Grande, mirá esto.",guion:"0–3s: gancho a cámara al lado de un auto.\n3–20s: 1. Papeles y transferencia. 2. Desgaste de cubiertas. 3. Óxido abajo (sal y ripio). 4. Calefacción y desempañador. 5. Historial de service.\n20–25s: \"En Sevillano cada auto pasa por esta revisión.\" CTA: escribinos al WhatsApp."},
+ {id:"p2",title:"Entregas Sevillano: llaves en mano",date:"2026-11-04",pilar:"exp",sub:"Entrega o atención al cliente",formato:"Reel",red:"Instagram",estado:"Idea",descripcion:"Entrega real de un auto a un cliente (pedir permiso para filmar y etiquetar).",gancho:"Así se va [nombre] con su primer auto.",guion:"0–3s: llaves en mano en primer plano.\n3–12s: cliente recorriendo el auto, foto con el vendedor.\n12–20s: una frase del cliente: ¿por qué Sevillano?\nCierre: \"El próximo podés ser vos.\""},
+ {id:"p3",title:"El elegido de la semana",date:"2026-11-06",pilar:"prod",sub:"Modelos",formato:"Reel",red:"Instagram",estado:"Idea",descripcion:"Presentación de un auto destacado del stock.",gancho:"Este auto no va a durar el fin de semana.",guion:"0–3s: toma frontal + precio en pantalla.\n3–15s: exterior, interior, tablero con km, baúl.\n15–22s: año, km, equipamiento.\nCTA: reservalo hoy por WhatsApp, Sebastián Elcano 367."},
+ {id:"p4",title:"Mitos y verdades del invierno fueguino",date:"2026-11-09",pilar:"valor",sub:"Mitos y verdades de la marca",formato:"Carrusel",red:"Instagram",estado:"Idea",descripcion:"Mitos comunes sobre preparar el auto para el invierno en Tierra del Fuego.",gancho:"¿Mito o verdad? Si tu auto no tiene esto, no pasa el invierno.",guion:"Slide 1: gancho.\nSlides 2–5: cubiertas de invierno, batería, anticongelante, plumillas (mito o verdad + explicación corta).\nCierre: guardalo y compartilo."},
+ {id:"p5",title:"El equipo de taller prepara un usado",date:"2026-11-11",pilar:"exp",sub:"Equipo de taller o vendedores",formato:"Reel",red:"Instagram",estado:"Idea",descripcion:"Detrás de escena: cómo llega y se prepara un usado, con el equipo de taller.",gancho:"Así llegó este auto… y así sale.",guion:"0–3s: antes/después en pantalla dividida.\n3–18s: recepción, revisión del taller, lavado, fotos.\n18–22s: \"Por eso son usados seleccionados.\" CTA: mirá el stock en la web."},
+ {id:"p6",title:"3 opciones según tu presupuesto",date:"2026-11-13",pilar:"prod",sub:"Comparativas",formato:"Reel",red:"Instagram",estado:"Idea",descripcion:"Comparativa de 3 autos del stock en un mismo rango de precio.",gancho:"¿Tenés X millones? Estos son tus 3 autos.",guion:"0–3s: monto en pantalla.\n3–20s: 5–6s por auto con precio y un dato fuerte (sumar el 6% de transferencia).\n20–25s: decinos tu presupuesto por WhatsApp."}],
+ ideas:[{id:"i1",title:"Preguntas frecuentes: ¿se puede financiar un usado?",pilar:"prod",sub:"Financiación",prioridad:"Alta",gancho:"La pregunta que más nos hacen por WhatsApp."},
+ {id:"i2",title:"Camioneta en ripio y nieve: prueba real",pilar:"exp",sub:"Uso de las camionetas",prioridad:"Media",gancho:"La llevamos a donde nadie lleva un usado."}],tasks:[]};
+let sheetUrl=local.get("sheet")||"";
+function setStatus(on,txt){document.getElementById("dot").classList.toggle("on",on);document.getElementById("syncTxt").textContent=txt}
+async function api(body){
+  const r=await fetch(sheetUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+  const j=await r.json();if(!j.ok)throw new Error(j.error||"error");return j;
+}
+async function push(body){
+  if(!sheetUrl)return;
+  try{await api(body);setStatus(true,"Sincronizado con Google Sheets")}
+  catch(e){setStatus(false,"Sin conexión: guardado en este navegador");toast("No se pudo sincronizar. Quedó guardado en este navegador.")}
+}
+function persist(){["posts","tasks","ideas"].forEach(k=>local.set(k,S[k]));local.set("brand",S.brand)}
+async function save(coll,item){
+  item={...item,updated:new Date().toISOString()};
+  const i=S[coll].findIndex(x=>x.id===item.id);
+  if(i>=0)S[coll][i]=item;else S[coll].push(item);
+  persist();render();push({action:"upsert",sheet:coll,item});
+}
+async function remove(coll,id){
+  S[coll]=S[coll].filter(x=>x.id!==id);persist();render();push({action:"delete",sheet:coll,id});
+}
+async function saveBrand(b){S.brand=b;persist();render();push({action:"upsert",sheet:"config",item:{id:"brand",...b}})}
+async function pull(){
+  if(!sheetUrl)return;
+  if(dlg.open||document.activeElement&&document.activeElement.isContentEditable)return;
+  try{
+    const j=await api({action:"all"});
+    ["posts","tasks","ideas"].forEach(k=>S[k]=j.data[k]||[]);
+    const b=(j.data.config||[]).find(x=>x.id==="brand");S.brand=b||S.brand;
+    persist();render();setStatus(true,"Sincronizado con Google Sheets");
+  }catch(e){setStatus(false,"Sin conexión: mostrando la copia de este navegador")}
+}
+async function init(){
+  const has=local.get("posts");
+  ["posts","tasks","ideas"].forEach(k=>S[k]=local.get(k)||(has?[]:SEED[k]));S.brand=local.get("brand");
+  if(!has)persist();
+  render();
+  if(!sheetUrl){setStatus(false,"Sin sincronizar · tocá para conectar");return}
+  setStatus(false,"Sincronizando…");
+  await pull();
+  if(!has&&!S.posts.length){S.posts=SEED.posts;S.ideas=SEED.ideas;persist();render();for(const k of ["posts","ideas"])for(const it of SEED[k])await push({action:"upsert",sheet:k,item:it})}
+  setInterval(pull,60000);
+}
+function openSync(){
+  frm.innerHTML=`<div class="mh"><h2>Sincronizar con Google Sheets</h2></div>
+  <div class="mb"><div class="full sub" style="font-size:13px;line-height:1.6">
+  1. Abrí la planilla del Content OS (o creá una en sheets.new).<br>
+  2. Andá a <b>Extensiones → Apps Script</b>, borrá todo y pegá el código de <b>apps-script.gs</b>.<br>
+  3. <b>Implementar → Nueva implementación</b> → tipo <b>Aplicación web</b>, ejecutar como <b>Yo</b>, acceso <b>Cualquier usuario</b>.<br>
+  4. Copiá la URL que termina en <b>/exec</b> y pegala acá. Cada compañero hace solo este último paso.</div>
+  <label class="full">URL de la aplicación web<input id="s_url" value="${esc(sheetUrl)}" placeholder="https://script.google.com/macros/s/…/exec"></label></div>
+  <div class="mf">${sheetUrl?`<button type="button" class="btn danger" data-off>Desconectar</button>`:""}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar y conectar</button></div>`;
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();
+  const off=frm.querySelector("[data-off]");if(off)off.onclick=()=>{sheetUrl="";local.set("sheet","");dlg.close();setStatus(false,"Sin sincronizar · tocá para conectar")};
+  frm.onsubmit=async e=>{e.preventDefault();const u=frm.querySelector("#s_url").value.trim();
+    if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){toast("La URL tiene que empezar con script.google.com y terminar en /exec");return}
+    sheetUrl=u;local.set("sheet",u);dlg.close();setStatus(false,"Sincronizando…");
+    const before={posts:S.posts,tasks:S.tasks,ideas:S.ideas};
+    try{const j=await api({action:"all"});
+      if(!(j.data.posts||[]).length&&before.posts.length){for(const k of ["posts","tasks","ideas"])for(const it of before[k])await api({action:"upsert",sheet:k,item:it});if(S.brand)await api({action:"upsert",sheet:"config",item:{id:"brand",...S.brand}});toast("Subimos tus datos a la planilla")}
+      await pull();
+    }catch(err){setStatus(false,"No se pudo conectar");toast("No se pudo conectar. Revisá que el acceso sea 'Cualquier usuario'.")}
+  };
+  dlg.showModal();
+}
+
+/* ---------- helpers ---------- */
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const todayS=()=>ymd(new Date());
+const fmtDay=s=>{const d=parse(s);return `${DIAS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`};
+const pillOf=p=>p&&PIL[p]?`<span class="pill p-${p}">${PIL[p].short}</span>`:`<span class="pill p-none">Sin pilar</span>`;
+function pillarForDate(s){const g=parse(s).getDay();return g===1?"valor":g===3?"exp":g===5?"prod":""}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600)}
+function gcal(title,date,time,details){
+  const d=date.replace(/-/g,"");let dates;
+  if(time){const[h,m]=time.split(":").map(Number);const e=new Date(2000,0,1,h+1,m);dates=`${d}T${time.replace(":","")}00/${d}T${String(e.getHours()).padStart(2,"0")}${String(e.getMinutes()).padStart(2,"0")}00`}
+  else{const n=parse(date);n.setDate(n.getDate()+1);dates=`${d}/${ymd(n).replace(/-/g,"")}`}
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${dates}&details=${encodeURIComponent(details||"")}&ctz=America/Argentina/Ushuaia`;
+}
+function weekDates(){const n=new Date();const g=n.getDay();const mon=new Date(n);mon.setDate(n.getDate()-((g+6)%7));return [0,2,4].map(o=>{const d=new Date(mon);d.setDate(mon.getDate()+o);return ymd(d)})}
+
+/* ---------- vistas ---------- */
+function render(){
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===view));
+  const m=document.getElementById("main");
+  m.innerHTML=({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,marca:vMarca})[view]();
+  bind();
+}
+function vHoy(){
+  const t=todayS(), wd=weekDates();
+  const slots=wd.map((d,i)=>{const pk=["valor","exp","prod"][i];const ps=S.posts.filter(p=>p.date===d);
+    return `<div class="slot ${pk}" data-newpost="${d}" tabindex="0">
+      <div class="row"><span class="day">${["Lunes","Miércoles","Viernes"][i]}</span><span class="sp"></span><span class="eyebrow">${fmtDay(d)}</span></div>
+      ${pillOf(pk)}
+      ${ps.length?ps.map(p=>`<div data-post="${p.id}"><div class="t">${esc(p.title)}</div><div class="row" style="margin-top:4px"><span class="chip">${esc(p.estado||"Idea")}</span><span class="chip">${esc(p.formato||"")}</span></div></div>`).join(""):`<div class="empty">Sin publicación. Tocá para planificarla.</div>`}
+    </div>`}).join("");
+  const pend=S.tasks.filter(x=>!x.done).sort((a,b)=>(a.date||"9")+(a.time||"")>(b.date||"9")+(b.time||"")?1:-1);
+  const hoyT=pend.filter(x=>x.date&&x.date<=t);
+  const prox=pend.filter(x=>!x.date||x.date>t).slice(0,8);
+  const atras=S.posts.filter(p=>p.date<t&&p.estado!=="Publicado");
+  const mes=new Date().getMonth();const pubMes=S.posts.filter(p=>p.estado==="Publicado"&&parse(p.date).getMonth()===mes).length;
+  const enProd=S.posts.filter(p=>p.estado!=="Publicado"&&p.estado!=="Idea").length;
+  return `
+  <div class="row"><div><div class="eyebrow">${DIAS[new Date().getDay()]} ${new Date().getDate()} de ${MESES[new Date().getMonth()]}</div><h1>Esta semana en redes</h1></div><span class="sp"></span>
+  <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn pri" data-act="newpost">+ Publicación</button></div>
+  <div class="stats">
+    <div class="card stat"><div class="eyebrow">Publicadas este mes</div><div class="n">${pubMes}</div></div>
+    <div class="card stat"><div class="eyebrow">En producción</div><div class="n">${enProd}</div></div>
+    <div class="card stat"><div class="eyebrow">Atrasadas</div><div class="n" style="color:${atras.length?"var(--warn)":"inherit"}">${atras.length}</div></div>
+    <div class="card stat"><div class="eyebrow">Ideas guardadas</div><div class="n">${S.ideas.length}</div></div>
+  </div>
+  <div class="today-grid">
+    <section><h2 style="margin-bottom:10px">Publicaciones L · M · V</h2><div class="week">${slots}</div>
+      ${atras.length?`<h2 style="margin:22px 0 10px">Atrasadas</h2><div class="list">${atras.map(p=>`<div class="item" data-post="${p.id}"><span class="when">${fmtDay(p.date)}</span><div class="txt"><div class="t">${esc(p.title)}</div><div class="row">${pillOf(p.pilar)}<span class="chip">${esc(p.estado)}</span></div></div></div>`).join("")}</div>`:""}
+    </section>
+    <section>
+      <h2 style="margin-bottom:10px">Para hoy</h2>
+      <div class="list">${hoyT.length?hoyT.map(taskRow).join(""):`<div class="empty">Nada pendiente para hoy.</div>`}</div>
+      <h2 style="margin:22px 0 10px">Próximo</h2>
+      <div class="list">${prox.length?prox.map(taskRow).join(""):`<div class="empty">Cargá reuniones, eventos y tareas con “+ Tarea / reunión”.</div>`}</div>
+    </section>
+  </div>`;
+}
+function taskRow(x){return `<div class="item ${x.done?"done":""}" data-task="${x.id}"><button class="check ${x.done?"on":""}" data-toggle="${x.id}" aria-label="Marcar como hecha"></button><span class="when">${x.date?fmtDay(x.date):"Sin fecha"}${x.time?"<br>"+x.time:""}</span><div class="txt"><div class="kind k-${x.tipo||"tarea"}">${esc(x.tipo||"tarea")}</div><div class="t">${esc(x.title)}</div>${x.lugar?`<div class="sub" style="font-size:12px">${esc(x.lugar)}</div>`:""}</div></div>`}
+
+function vCal(){
+  const y=calMonth.getFullYear(),mo=calMonth.getMonth();
+  const first=new Date(y,mo,1);const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+  const t=todayS();let cells="";
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const s=ymd(d);const out=d.getMonth()!==mo;
+    if(i>=35&&out&&d.getDate()>7)break;
+    const pk=pillarForDate(s);
+    const ps=calFilter==="tasks"?[]:S.posts.filter(p=>p.date===s&&(calFilter==="all"||p.pilar===calFilter));
+    const ts=calFilter==="all"||calFilter==="tasks"?S.tasks.filter(x=>x.date===s):[];
+    cells+=`<div class="cell ${out?"out":""} ${s===t?"today":""}"><div class="num"><b>${DIAS[d.getDay()]} ${d.getDate()}</b>${pk?`<span class="tag" style="color:var(--${pk})">${PIL[pk].short}</span>`:""}<button class="add" data-newpost="${s}" aria-label="Agregar en ${s}">+</button></div>
+      ${ps.map(p=>`<div class="ev ${p.pilar||"task"} ${p.estado==="Publicado"?"pubd":""}" data-post="${p.id}" title="${esc(p.title)}">${esc(p.title)}</div>`).join("")}
+      ${ts.map(x=>`<div class="ev task ${x.done?"pubd":""}" data-task="${x.id}">${x.time?x.time+" ":""}${esc(x.title)}</div>`).join("")}</div>`;}
+  const f=(k,l)=>`<button aria-pressed="${calFilter===k}" data-calf="${k}">${l}</button>`;
+  return `<div class="row"><h1 style="text-transform:capitalize">${MESES[mo]} ${y}</h1><span class="sp"></span>
+    <button class="btn" data-cal="-1" aria-label="Mes anterior">‹</button><button class="btn" data-cal="0">Hoy</button><button class="btn" data-cal="1" aria-label="Mes siguiente">›</button>
+    <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn pri" data-act="newpost">+ Publicación</button></div>
+    <div class="filters">${f("all","Todo")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}${f("tasks","Tareas y reuniones")}</div>
+    <div class="cal-head">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=>`<div>${d}</div>`).join("")}</div>
+    <div class="cal">${cells}</div>`;
+}
+function vProd(){
+  const cols=ESTADOS.map(e=>{const ps=S.posts.filter(p=>(p.estado||"Idea")===e).sort((a,b)=>a.date>b.date?1:-1);
+    return `<div class="col" data-col="${e}"><h3>${e}<span>${ps.length}</span></h3>
+      ${ps.map(p=>{const k=ESTADOS.indexOf(e);return `<div class="kcard ${p.pilar||""}" draggable="true" data-drag="${p.id}" data-post="${p.id}">
+        <div class="meta">${fmtDay(p.date)} · ${esc(p.formato||"")}</div><div style="font-weight:700">${esc(p.title)}</div>
+        <div class="row">${pillOf(p.pilar)}${p.auto?`<span class="chip">${esc(p.auto)}</span>`:""}</div>
+        <div class="mv">${k>0?`<button data-move="${p.id}" data-to="${ESTADOS[k-1]}" aria-label="Mover atrás">←</button>`:""}${k<4?`<button data-move="${p.id}" data-to="${ESTADOS[k+1]}" aria-label="Mover adelante">→</button>`:""}</div></div>`}).join("")||`<div class="empty">Arrastrá tarjetas acá</div>`}
+    </div>`}).join("");
+  return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn pri" data-act="newpost">+ Publicación</button></div>
+  <p class="sub" style="margin:6px 0 0">Arrastrá cada publicación a la columna de su estado, o usá las flechas.</p><div class="board">${cols}</div>`;
+}
+function vIdeas(){
+  const f=(k,l)=>`<button aria-pressed="${ideaFilter===k}" data-ideaf="${k}">${l}</button>`;
+  const list=S.ideas.filter(i=>ideaFilter==="all"||i.pilar===ideaFilter).sort((a,b)=>(a.prioridad==="Alta"?0:1)-(b.prioridad==="Alta"?0:1));
+  return `<div class="row"><h1>Banco de ideas</h1><span class="sp"></span><button class="btn pri" data-act="newidea">+ Idea</button></div>
+  <div class="filters">${f("all","Todas")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}</div>
+  <div class="ideas">${list.length?list.map(i=>`<div class="card idea" data-idea="${i.id}"><div class="row">${pillOf(i.pilar)}${i.sub?`<span class="chip">${esc(i.sub)}</span>`:""}<span class="sp"></span><span class="prio ${(i.prioridad||"").toLowerCase()}">${esc(i.prioridad||"")}</span></div>
+    <div class="hook">${esc(i.gancho||i.title)}</div><div class="sub">${esc(i.title)}</div></div>`).join(""):`<div class="empty" style="grid-column:1/-1">Guardá acá cada idea que se te ocurra. Después la pasás al calendario con un toque.</div>`}</div>`;
+}
+function vMarca(){
+  const b=brand();
+  return `<h1>Marca y pilares</h1><p class="sub" style="margin:6px 0 0">Tocá cualquier texto para editarlo. Se guarda al salir del campo.</p>
+  <div class="pillars">${Object.entries(PIL).map(([k,p])=>`<div class="card pillar ${k}">
+    <div class="dayb">${["","Lunes","","Miércoles","","Viernes"][p.day]}</div><h2 style="margin:4px 0 6px">${p.name}</h2>
+    <div class="ed sub" contenteditable="true" data-bdesc="${k}">${esc(b.desc[k])}</div>
+    <ul class="subs">${b.subs[k].map((s,i)=>`<li><span class="ed" contenteditable="true" data-bsub="${k}" data-i="${i}">${esc(s)}</span></li>`).join("")}</ul>
+    <button class="btn ghost" data-addsub="${k}" style="margin-top:6px">+ Subtema</button></div>`).join("")}</div>
+  <div class="today-grid">
+    <div class="card"><h2>Tono de marca</h2><div class="ed" contenteditable="true" data-btono style="margin-top:8px">${esc(b.tono)}</div></div>
+    <div class="card"><h2>Metas del trimestre</h2><ul class="subs">${b.metas.map((m,i)=>`<li><span class="ed" contenteditable="true" data-bmeta="${i}">${esc(m)}</span></li>`).join("")}</ul><button class="btn ghost" data-addmeta style="margin-top:6px">+ Meta</button></div>
+  </div>`;
+}
+
+/* ---------- modales ---------- */
+const dlg=document.getElementById("dlg"),frm=document.getElementById("frm");
+const opt=(arr,v)=>arr.map(a=>`<option ${a===v?"selected":""}>${esc(a)}</option>`).join("");
+function subsOpts(p,v){return `<option value="">—</option>`+(p?brand().subs[p]:[]).map(s=>`<option ${s===v?"selected":""}>${esc(s)}</option>`).join("")}
+function postForm(p){
+  const isNew=!p;p=p||{id:uid(),date:todayS(),estado:"Idea",formato:"Reel",red:"Instagram"};
+  if(isNew)p.pilar=pillarForDate(p.date);
+  return {p,isNew};
+}
+function openPost(id,date,from){
+  let {p,isNew}=postForm(S.posts.find(x=>x.id===id));
+  if(date){p.date=date;p.pilar=pillarForDate(date)||p.pilar}
+  if(from)Object.assign(p,{title:from.title,pilar:from.pilar,sub:from.sub,gancho:from.gancho,guion:from.guion,descripcion:from.descripcion});
+  frm.innerHTML=`<div class="mh"><h2>${isNew?"Nueva publicación":"Publicación"}</h2><span class="sp"></span>${pillOf(p.pilar)}</div>
+  <div class="mb">
+    <label class="full">Título<input id="f_title" required value="${esc(p.title)}" placeholder="Ej.: 5 cosas para revisar en un usado"></label>
+    <label>Fecha<input type="date" id="f_date" value="${p.date}"></label>
+    <label>Hora<input type="time" id="f_time" value="${esc(p.time)}"></label>
+    <label>Pilar<select id="f_pilar"><option value="">—</option>${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${p.pilar===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
+    <label>Idea / sección<select id="f_sub">${subsOpts(p.pilar,p.sub)}</select></label>
+    <label>Formato<select id="f_formato">${opt(FORMATOS,p.formato)}</select></label>
+    <label>Red social<select id="f_red">${opt(REDES,p.red)}</select></label>
+    <label>Estado<select id="f_estado">${opt(ESTADOS,p.estado)}</select></label>
+    <label>Responsable<input id="f_resp" value="${esc(p.responsable)}"></label>
+    <label class="full">Vehículo (si aplica)<input id="f_auto" value="${esc(p.auto)}" placeholder="Ej.: Toyota Hilux 2021"></label>
+    <label class="full">Descripción del contenido<textarea id="f_desc">${esc(p.descripcion)}</textarea></label>
+    <label class="full">Gancho sugerido<input id="f_gancho" value="${esc(p.gancho)}"></label>
+    <label class="full">Guion<textarea id="f_guion" style="min-height:140px">${esc(p.guion)}</textarea></label>
+    <label class="full">Link publicado<input id="f_link" value="${esc(p.link)}" placeholder="https://instagram.com/…"></label>
+  </div>
+  <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><a class="btn" target="_blank" rel="noopener" href="${gcal("📲 "+(p.title||""),p.date,p.time,(p.gancho||"")+"\n\n"+(p.guion||""))}">Agregar a Google Calendar</a>`}
+    <span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" value="ok">Guardar</button></div>`;
+  frm.querySelector("#f_pilar").onchange=e=>frm.querySelector("#f_sub").innerHTML=subsOpts(e.target.value,"");
+  frm.querySelector("#f_date").onchange=e=>{const k=pillarForDate(e.target.value);if(k){frm.querySelector("#f_pilar").value=k;frm.querySelector("#f_sub").innerHTML=subsOpts(k,"")}};
+  frm.onsubmit=e=>{e.preventDefault();const v=k=>frm.querySelector("#f_"+k).value.trim();
+    if(!v("title")){frm.querySelector("#f_title").focus();return}
+    save("posts",{...p,title:v("title"),date:v("date")||todayS(),time:v("time"),pilar:v("pilar"),sub:v("sub"),formato:v("formato"),red:v("red"),estado:v("estado"),responsable:v("resp"),auto:v("auto"),descripcion:v("desc"),gancho:v("gancho"),guion:v("guion"),link:v("link")});
+    if(from&&from.id&&S.ideas.find(i=>i.id===from.id))remove("ideas",from.id);
+    dlg.close();toast("Guardado");};
+  wireModal(()=>{remove("posts",p.id);toast("Publicación borrada")});
+  dlg.showModal();
+}
+function openTask(id,date){
+  const isNew=!S.tasks.find(x=>x.id===id);const x=S.tasks.find(x=>x.id===id)||{id:uid(),date:date||todayS(),tipo:"tarea"};
+  frm.innerHTML=`<div class="mh"><h2>${isNew?"Nueva tarea, reunión o evento":"Editar"}</h2></div>
+  <div class="mb">
+    <label class="full">Qué<input id="t_title" required value="${esc(x.title)}" placeholder="Ej.: Reunión de marketing con Santiago"></label>
+    <label>Tipo<select id="t_tipo">${["tarea","reunion","evento"].map(t=>`<option value="${t}" ${x.tipo===t?"selected":""}>${{tarea:"Tarea",reunion:"Reunión",evento:"Evento"}[t]}</option>`).join("")}</select></label>
+    <label>Fecha<input type="date" id="t_date" value="${esc(x.date)}"></label>
+    <label>Hora<input type="time" id="t_time" value="${esc(x.time)}"></label>
+    <label>Lugar / con quién<input id="t_lugar" value="${esc(x.lugar)}"></label>
+    <label class="full">Notas<textarea id="t_notas">${esc(x.notas)}</textarea></label>
+  </div>
+  <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><a class="btn" target="_blank" rel="noopener" href="${gcal(x.title||"",x.date||todayS(),x.time,(x.lugar||"")+"\n"+(x.notas||""))}">Agregar a Google Calendar</a>`}
+  <span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
+  frm.onsubmit=e=>{e.preventDefault();const v=k=>frm.querySelector("#t_"+k).value.trim();if(!v("title"))return;
+    save("tasks",{...x,title:v("title"),tipo:v("tipo"),date:v("date"),time:v("time"),lugar:v("lugar"),notas:v("notas")});dlg.close();toast("Guardado")};
+  wireModal(()=>{remove("tasks",x.id);toast("Borrado")});
+  dlg.showModal();
+}
+function openIdea(id){
+  const isNew=!S.ideas.find(i=>i.id===id);const x=S.ideas.find(i=>i.id===id)||{id:uid(),pilar:"valor",prioridad:"Media"};
+  frm.innerHTML=`<div class="mh"><h2>${isNew?"Nueva idea":"Idea"}</h2></div>
+  <div class="mb">
+    <label class="full">Idea<input id="i_title" required value="${esc(x.title)}"></label>
+    <label>Pilar<select id="i_pilar">${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${x.pilar===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
+    <label>Sección<select id="i_sub">${subsOpts(x.pilar,x.sub)}</select></label>
+    <label>Prioridad<select id="i_prio">${opt(["Alta","Media","Baja"],x.prioridad)}</select></label>
+    <label class="full">Gancho<input id="i_gancho" value="${esc(x.gancho)}"></label>
+    <label class="full">Descripción<textarea id="i_desc">${esc(x.descripcion)}</textarea></label>
+    <label class="full">Guion<textarea id="i_guion">${esc(x.guion)}</textarea></label>
+  </div>
+  <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><button type="button" class="btn" data-plan>Pasar al calendario</button>`}
+  <span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
+  frm.querySelector("#i_pilar").onchange=e=>frm.querySelector("#i_sub").innerHTML=subsOpts(e.target.value,"");
+  const read=()=>{const v=k=>frm.querySelector("#i_"+k).value.trim();return {...x,title:v("title"),pilar:v("pilar"),sub:v("sub"),prioridad:v("prio"),gancho:v("gancho"),descripcion:v("desc"),guion:v("guion")}};
+  frm.onsubmit=e=>{e.preventDefault();const r=read();if(!r.title)return;save("ideas",r);dlg.close();toast("Idea guardada")};
+  const pl=frm.querySelector("[data-plan]");if(pl)pl.onclick=()=>{const r=read();dlg.close();
+    const day=PIL[r.pilar].day;const d=new Date();d.setDate(d.getDate()+((day-d.getDay()+7)%7||7));openPost(null,ymd(d),r)};
+  wireModal(()=>{remove("ideas",x.id);toast("Idea borrada")});
+  dlg.showModal();
+}
+function wireModal(onDel){
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();
+  const d=frm.querySelector("[data-del]");
+  if(d)d.onclick=()=>{if(d.dataset.sure){onDel();dlg.close()}else{d.dataset.sure=1;d.textContent="Tocá de nuevo para borrar"}};
+}
+
+/* ---------- eventos ---------- */
+function bind(){
+  const m=document.getElementById("main");
+  m.onclick=e=>{
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-newpost],[data-act],[data-cal],[data-calf],[data-ideaf],[data-addsub],[data-addmeta]");if(!t)return;
+    const d=t.dataset;
+    if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
+    if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
+    if(d.post)return openPost(d.post);
+    if(d.task)return openTask(d.task);
+    if(d.idea)return openIdea(d.idea);
+    if(d.newpost)return openPost(null,d.newpost);
+    if(d.act==="newpost")return openPost(null,null);
+    if(d.act==="newtask")return openTask(null);
+    if(d.act==="newidea")return openIdea(null);
+    if(d.cal!==undefined){calMonth=d.cal==="0"?new Date():new Date(calMonth.getFullYear(),calMonth.getMonth()+Number(d.cal),1);render();return}
+    if(d.calf){calFilter=d.calf;render();return}
+    if(d.ideaf){ideaFilter=d.ideaf;render();return}
+    if(d.addsub!==undefined){const b=structuredClone(brand());b.subs[d.addsub]=[...b.subs[d.addsub],"Nuevo subtema"];saveBrand(b);return}
+    if(d.addmeta!==undefined){const b=structuredClone(brand());b.metas=[...b.metas,"Nueva meta"];saveBrand(b);return}
+  };
+  m.onkeydown=e=>{if(e.key==="Enter"&&e.target.matches(".slot")){e.target.click()}};
+  m.querySelectorAll("[contenteditable]").forEach(el=>{
+    el.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();el.blur()}};
+    el.onblur=()=>{const b=structuredClone(brand());const v=el.textContent.trim();const d=el.dataset;
+      if(d.bsub){if(v)b.subs[d.bsub][d.i]=v;else b.subs[d.bsub].splice(d.i,1)}
+      else if(d.bdesc)b.desc[d.bdesc]=v;
+      else if(d.btono!==undefined)b.tono=v;
+      else if(d.bmeta!==undefined){if(v)b.metas[d.bmeta]=v;else b.metas.splice(d.bmeta,1)}
+      if(JSON.stringify(b)!==JSON.stringify(brand()))saveBrand(b);};
   });
-
-  const STORAGE_KEY = 'sevillano-content-os-v2';
-  const MONTHS_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  const DOW_ES = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-
-  function defaultState() {
-    const now = new Date();
-    return {
-      plan: {
-        objetivo: "Instalar a Sevillano Usados como la agencia de usados de referencia en Río Grande: generar confianza sostenida a través de contenido constante que muestre respaldo, trayectoria y stock exclusivo, convirtiendo seguidores en consultas por DM y visitas al showroom.",
-        metas: [
-          { title: "Crecer la comunidad", desc: "Pasar de 215 a 500+ seguidores en Instagram con contenido constante y colaboraciones locales." },
-          { title: "Generar consultas calificadas", desc: "Al menos 15 consultas por DM o WhatsApp por mes originadas en publicaciones de vehículos." },
-          { title: "Instalar la marca", desc: "Publicar con regularidad semanal para construir reconocimiento de marca en Río Grande y Ushuaia." },
-          { title: "Validar el rebranding", desc: "Testear tono y estética con la audiencia actual, dejando base lista si la marca evoluciona." }
-        ],
-        freq: [
-          { formato: "Feed (foto/carrusel)", red: "Instagram", frecuencia: "3x / semana" },
-          { formato: "Reels", red: "Instagram / TikTok", frecuencia: "2x / semana" },
-          { formato: "Historias", red: "Instagram", frecuencia: "Diario" },
-          { formato: "Recordatorio de stock", red: "WhatsApp Estados", frecuencia: "2x / semana" }
-        ],
-        toneDesc: "Cercano, confiable y sin tecnicismos. Habla como un asesor de confianza, no como un vendedor.",
-        tones: ["Cercano", "Transparente", "Local", "Sin tecnicismos", "Con respaldo"]
-      },
-      pillars: [
-        { name: "Vehículos destacados", pct: "35%", desc: "Cada unidad del stock con sus fotos, detalles y estado. Es la vidriera digital del showroom.", formats: "Carrusel foto · Reel walkaround · Historia con precio", color: "#0B2A55" },
-        { name: "Confianza y respaldo", pct: "20%", desc: "Testimonios de clientes, trayectoria de la agencia, garantías y proceso de verificación de cada auto.", formats: "Testimonio · Detrás de escena", color: "#E29A2E" },
-        { name: "Educación al comprador", pct: "20%", desc: "Tips para elegir un usado, cómo funcionan los planes de ahorro, qué revisar antes de comprar.", formats: "Reel tip · Carrusel educativo", color: "#2E9E68" },
-        { name: "Detrás de escena", pct: "10%", desc: "El equipo, la preparación de cada auto, el día a día de la agencia. Le pone cara humana a la marca.", formats: "Historia · Reel casual", color: "#8C96A6" },
-        { name: "Promos y planes", pct: "15%", desc: "Planes de ahorro, 0km patentados y ofertas puntuales. Con llamado a la acción claro.", formats: "Post promo · Historia con CTA", color: "#C24C3F" }
-      ],
-      events: {},
-      currentMonth: now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0'),
-      produccion: [
-        { vehiculo: "Corolla XEI 2022", fotos: true, video: true, edicion: false, copy: false, miniatura: false, programado: false, publicado: false, link: "", fechaInicio: new Date(Date.now() - 5*86400000).toISOString().slice(0,10) },
-        { vehiculo: "Amarok V6", fotos: true, video: true, edicion: true, copy: false, miniatura: false, programado: false, publicado: false, link: "", fechaInicio: new Date().toISOString().slice(0,10) }
-      ],
-      ideas: [
-        { idea: "Tip de compra: qué revisar antes de llevarte un usado", pilar: "Educación al comprador", formato: "Carrusel", gancho: "3 cosas que nadie te dice antes de comprar un usado", cta: "Escribinos y te asesoramos gratis", prioridad: "Media", estado: "Idea", notas: "" }
-      ]
-    };
-  }
-
-  let state = defaultState();
-  let saveTimer = null;
-  const LOCAL_CACHE_KEY = 'su-content-os-cache';
-  const GSCRIPT_URL_KEY = 'su-gscript-url';
-
-  function getScriptUrl() { return localStorage.getItem(GSCRIPT_URL_KEY) || ''; }
-  function setScriptUrl(url) { localStorage.setItem(GSCRIPT_URL_KEY, url); }
-
-  function setSyncStatus(mode, text) {
-    const el = document.getElementById('su-sync-status');
-    if (!el) return;
-    el.classList.remove('su-ok', 'su-err', 'su-busy');
-    if (mode) el.classList.add(mode);
-    el.innerHTML = '<span class="su-sync-dot"></span>' + text;
-  }
-
-  // Always cache locally first so nothing is ever lost, even mid-sync or offline.
-  function cacheLocally() {
-    try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ }
-  }
-
-  function persist() {
-    cacheLocally();
-    const statusEl = document.getElementById('su-save-status');
-    clearTimeout(saveTimer);
-    const url = getScriptUrl();
-    if (!url) {
-      if (statusEl) statusEl.textContent = 'Guardado en este dispositivo — conectá Google Sheets para sincronizar';
-      return;
-    }
-    saveTimer = setTimeout(async () => {
-      setSyncStatus('su-busy', 'Sincronizando con Google Sheets...');
-      try {
-        await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
-          body: JSON.stringify(state)
-        });
-        setSyncStatus('su-ok', 'Sincronizado con Google Sheets ✓');
-        if (statusEl) { statusEl.textContent = 'Guardado ✓'; setTimeout(() => statusEl.textContent = '', 1500); }
-      } catch (e) {
-        console.error('Sync error', e);
-        setSyncStatus('su-err', 'No se pudo sincronizar — se guardó en este dispositivo');
-      }
-    }, 500);
-  }
-
-  async function load() {
-    // 1) Load whatever is cached on this device immediately, so the UI never looks empty.
-    try {
-      const cached = localStorage.getItem(LOCAL_CACHE_KEY);
-      if (cached) state = Object.assign(defaultState(), JSON.parse(cached));
-    } catch (e) { /* ignore */ }
-
-    const url = getScriptUrl();
-    if (!url) {
-      setSyncStatus(null, 'Sin configurar — tocá "⚙ Sincronización" para conectar tu Google Sheet');
-      renderAll();
-      return;
-    }
-
-    // 2) Then try to pull the latest version from Google Sheets (source of truth across devices).
-    setSyncStatus('su-busy', 'Cargando desde Google Sheets...');
-    try {
-      const res = await fetch(url, { method: 'GET' });
-      const data = await res.json();
-      if (data && data.plan) {
-        state = Object.assign(defaultState(), data);
-      }
-      setSyncStatus('su-ok', 'Sincronizado con Google Sheets ✓');
-    } catch (e) {
-      console.error('Load error', e);
-      setSyncStatus('su-err', 'No se pudo conectar con Google Sheets — mostrando datos guardados en este dispositivo');
-    }
-
-    if (!state.plan) state.plan = defaultState().plan;
-    if (!state.pillars) state.pillars = defaultState().pillars;
-    if (!state.events) state.events = {};
-    if (!state.produccion) state.produccion = defaultState().produccion;
-    if (!state.ideas) state.ideas = defaultState().ideas;
-    renderAll();
-  }
-
-  // ---------- Settings modal ----------
-  const settingsOverlay = document.getElementById('su-settings-overlay');
-  document.getElementById('su-settings-open').addEventListener('click', () => {
-    document.getElementById('su-gscript-url-input').value = getScriptUrl();
-    settingsOverlay.classList.add('open');
+  m.querySelectorAll("[data-drag]").forEach(c=>c.ondragstart=e=>e.dataTransfer.setData("text/plain",c.dataset.drag));
+  m.querySelectorAll("[data-col]").forEach(col=>{
+    col.ondragover=e=>{e.preventDefault();col.classList.add("over")};
+    col.ondragleave=()=>col.classList.remove("over");
+    col.ondrop=e=>{e.preventDefault();col.classList.remove("over");const id=e.dataTransfer.getData("text/plain");const p=S.posts.find(x=>x.id===id);if(p&&p.estado!==col.dataset.col)save("posts",{...p,estado:col.dataset.col})};
   });
-  document.getElementById('su-settings-cancel').addEventListener('click', () => settingsOverlay.classList.remove('open'));
-  settingsOverlay.addEventListener('click', e => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('open'); });
-  document.getElementById('su-settings-save').addEventListener('click', () => {
-    const url = document.getElementById('su-gscript-url-input').value.trim();
-    if (url) {
-      setScriptUrl(url);
-      settingsOverlay.classList.remove('open');
-      load();
-    }
-  });
-
-  // ---------- Dark mode ----------
-  const THEME_KEY = 'su-theme';
-  function applyTheme(theme) {
-    const btn = document.getElementById('su-theme-toggle');
-    if (theme === 'dark') {
-      root.classList.add('su-dark');
-      if (btn) btn.textContent = '☀';
-    } else {
-      root.classList.remove('su-dark');
-      if (btn) btn.textContent = '🌙';
-    }
-  }
-  applyTheme(localStorage.getItem(THEME_KEY) || 'light');
-  document.getElementById('su-theme-toggle').addEventListener('click', () => {
-    const isDark = root.classList.contains('su-dark');
-    const next = isDark ? 'light' : 'dark';
-    localStorage.setItem(THEME_KEY, next);
-    applyTheme(next);
-  });
-
-  // ---------- Print / export ----------
-  document.getElementById('su-print-btn').addEventListener('click', () => {
-    panels.forEach(p => p.classList.add('active')); // show all panels for print
-    window.print();
-    tabs.forEach(t => t.classList.remove('active'));
-    panels.forEach(p => p.classList.remove('active'));
-    const activeTab = root.querySelector('.su-tab[data-panel="dashboard"]');
-    if (activeTab) { activeTab.classList.add('active'); document.getElementById('panel-dashboard').classList.add('active'); }
-  });
-
-  function renderAll() {
-    renderMetas();
-    renderFreq();
-    renderTones();
-    renderPillars();
-    renderMonth();
-    renderProduccion();
-    renderIdeas();
-    renderStats();
-    document.getElementById('su-objetivo-text').textContent = state.plan.objetivo;
-    document.getElementById('su-tone-desc').textContent = state.plan.toneDesc;
-  }
-
-  // ---------- PLAN: contenteditable fields ----------
-  document.getElementById('su-objetivo-text').addEventListener('input', e => { state.plan.objetivo = e.target.textContent; persist(); });
-  document.getElementById('su-tone-desc').addEventListener('input', e => { state.plan.toneDesc = e.target.textContent; persist(); });
-
-  function renderMetas() {
-    const wrap = document.getElementById('su-metas-wrap');
-    wrap.innerHTML = '';
-    state.plan.metas.forEach((meta, idx) => {
-      const card = document.createElement('div');
-      card.className = 'su-card su-meta';
-      card.innerHTML = `
-        <div class="su-meta-num">${String(idx + 1).padStart(2, '0')}</div>
-        <div class="su-meta-body">
-          <h3 contenteditable="true" data-idx="${idx}" data-k="title"></h3>
-          <p contenteditable="true" data-idx="${idx}" data-k="desc"></p>
-        </div>
-        <button class="su-icon-btn" data-del="${idx}" title="Eliminar meta">✕</button>
-      `;
-      card.querySelector('[data-k="title"]').textContent = meta.title;
-      card.querySelector('[data-k="desc"]').textContent = meta.desc;
-      wrap.appendChild(card);
-    });
-    wrap.querySelectorAll('[data-k]').forEach(el => {
-      el.addEventListener('input', () => {
-        const i = +el.dataset.idx, k = el.dataset.k;
-        state.plan.metas[i][k] = el.textContent;
-        persist();
-      });
-    });
-    wrap.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.plan.metas.splice(+btn.dataset.del, 1);
-        persist(); renderMetas();
-      });
-    });
-  }
-  document.getElementById('su-add-meta').addEventListener('click', () => {
-    state.plan.metas.push({ title: 'Nueva meta', desc: 'Descripción de la meta...' });
-    persist(); renderMetas();
-  });
-
-  function renderFreq() {
-    const body = document.getElementById('su-freq-body');
-    body.innerHTML = '';
-    state.plan.freq.forEach((row, idx) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td contenteditable="true" data-idx="${idx}" data-k="formato"></td>
-        <td contenteditable="true" data-idx="${idx}" data-k="red"></td>
-        <td contenteditable="true" data-idx="${idx}" data-k="frecuencia" style="font-weight:700;color:var(--amber-deep);"></td>
-        <td><button class="su-icon-btn" data-del="${idx}">✕</button></td>
-      `;
-      tr.querySelector('[data-k="formato"]').textContent = row.formato;
-      tr.querySelector('[data-k="red"]').textContent = row.red;
-      tr.querySelector('[data-k="frecuencia"]').textContent = row.frecuencia;
-      body.appendChild(tr);
-    });
-    body.querySelectorAll('[data-k]').forEach(el => {
-      el.addEventListener('input', () => {
-        const i = +el.dataset.idx, k = el.dataset.k;
-        state.plan.freq[i][k] = el.textContent;
-        persist();
-      });
-    });
-    body.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.plan.freq.splice(+btn.dataset.del, 1);
-        persist(); renderFreq();
-      });
-    });
-  }
-  document.getElementById('su-add-freq').addEventListener('click', () => {
-    state.plan.freq.push({ formato: 'Nuevo formato', red: 'Red', frecuencia: '1x / semana' });
-    persist(); renderFreq();
-  });
-
-  function renderTones() {
-    const wrap = document.getElementById('su-tone-tags');
-    wrap.innerHTML = '';
-    state.plan.tones.forEach((tone, idx) => {
-      const tag = document.createElement('span');
-      tag.className = 'su-tone-tag';
-      tag.innerHTML = `<span contenteditable="true" data-idx="${idx}"></span><button data-del="${idx}">✕</button>`;
-      tag.querySelector('span').textContent = tone;
-      wrap.appendChild(tag);
-    });
-    const addBtn = document.createElement('button');
-    addBtn.className = 'su-tag-add';
-    addBtn.textContent = '+ tag';
-    addBtn.addEventListener('click', () => {
-      state.plan.tones.push('nuevo');
-      persist(); renderTones();
-    });
-    wrap.appendChild(addBtn);
-
-    wrap.querySelectorAll('[data-idx]').forEach(el => {
-      el.addEventListener('input', () => { state.plan.tones[+el.dataset.idx] = el.textContent; persist(); });
-    });
-    wrap.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => { state.plan.tones.splice(+btn.dataset.del, 1); persist(); renderTones(); });
-    });
-  }
-
-  // ---------- PILARES ----------
-  function renderPillars() {
-    const wrap = document.getElementById('su-pillars-wrap');
-    wrap.innerHTML = '';
-    state.pillars.forEach((p, idx) => {
-      const card = document.createElement('div');
-      card.className = 'su-pillar';
-      card.style.setProperty('--pillar-color', p.color);
-      card.innerHTML = `
-        <button class="su-icon-btn su-pillar-del" data-del="${idx}">✕</button>
-        <div class="su-pillar-top">
-          <h3 contenteditable="true" data-idx="${idx}" data-k="name"></h3>
-          <span class="su-pillar-pct-wrap"><span class="su-pillar-pct" contenteditable="true" data-idx="${idx}" data-k="pct"></span></span>
-        </div>
-        <p contenteditable="true" data-idx="${idx}" data-k="desc"></p>
-        <div class="su-pillar-formats" contenteditable="true" data-idx="${idx}" data-k="formats"></div>
-      `;
-      card.querySelector('[data-k="name"]').textContent = p.name;
-      card.querySelector('[data-k="pct"]').textContent = p.pct;
-      card.querySelector('[data-k="desc"]').textContent = p.desc;
-      card.querySelector('[data-k="formats"]').textContent = p.formats;
-      wrap.appendChild(card);
-    });
-    wrap.querySelectorAll('[data-k]').forEach(el => {
-      el.addEventListener('input', () => {
-        const i = +el.dataset.idx, k = el.dataset.k;
-        state.pillars[i][k] = el.textContent;
-        persist();
-        if (k === 'name') renderEventPillarOptions();
-      });
-    });
-    wrap.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        state.pillars.splice(+btn.dataset.del, 1);
-        persist(); renderPillars(); renderEventPillarOptions();
-      });
-    });
-    renderEventPillarOptions();
-  }
-  const PALETTE = ['#0B2A55', '#E29A2E', '#2E9E68', '#8C96A6', '#C24C3F', '#6C4FC2', '#1E88A8'];
-  document.getElementById('su-add-pillar').addEventListener('click', () => {
-    const color = PALETTE[state.pillars.length % PALETTE.length];
-    state.pillars.push({ name: 'Nuevo pilar', pct: '10%', desc: 'Descripción del pilar...', formats: 'Formato 1 · Formato 2', color });
-    persist(); renderPillars();
-  });
-
-  function renderEventPillarOptions() {
-    const sel = document.getElementById('ev-pillar');
-    const current = sel.value;
-    sel.innerHTML = '';
-    state.pillars.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.name; opt.textContent = p.name;
-      sel.appendChild(opt);
-    });
-    if (current) sel.value = current;
-  }
-
-  // ---------- PRODUCCIÓN ----------
-  const OVERDUE_DAYS = 3;
-  function daysSince(dateStr) {
-    if (!dateStr) return 0;
-    const start = new Date(dateStr + 'T00:00:00');
-    const diff = Math.floor((Date.now() - start.getTime()) / 86400000);
-    return diff;
-  }
-
-  function renderProduccion() {
-    const body = document.getElementById('su-prod-body');
-    body.innerHTML = '';
-    const boolFields = ['fotos', 'video', 'edicion', 'copy', 'miniatura', 'programado', 'publicado'];
-    state.produccion.forEach((row, idx) => {
-      if (!row.fechaInicio) row.fechaInicio = new Date().toISOString().slice(0, 10);
-      const tr = document.createElement('tr');
-      const dias = daysSince(row.fechaInicio);
-      const overdue = !row.publicado && dias >= OVERDUE_DAYS;
-      if (overdue) tr.style.background = 'rgba(194,76,63,0.08)';
-
-      const tdV = document.createElement('td');
-      const vInput = document.createElement('input');
-      vInput.type = 'text'; vInput.value = row.vehiculo; vInput.placeholder = 'Vehículo';
-      vInput.addEventListener('input', () => { row.vehiculo = vInput.value; persist(); });
-      tdV.appendChild(vInput);
-      tr.appendChild(tdV);
-
-      const tdDias = document.createElement('td');
-      tdDias.innerHTML = overdue
-        ? `<span style="color:var(--red); font-weight:700;" title="Sin publicar hace ${dias} días">⚠ ${dias}d</span>`
-        : `<span style="color:var(--ink-soft);">${dias}d</span>`;
-      tr.appendChild(tdDias);
-
-      boolFields.forEach(field => {
-        const td = document.createElement('td');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.checked = !!row[field];
-        cb.addEventListener('change', () => { row[field] = cb.checked; persist(); renderStats(); renderProduccion(); });
-        td.appendChild(cb);
-        tr.appendChild(td);
-      });
-
-      const tdLink = document.createElement('td');
-      const linkInput = document.createElement('input');
-      linkInput.type = 'text'; linkInput.value = row.link || ''; linkInput.placeholder = 'URL';
-      linkInput.addEventListener('input', () => { row.link = linkInput.value; persist(); });
-      tdLink.appendChild(linkInput);
-      tr.appendChild(tdLink);
-
-      const tdDel = document.createElement('td');
-      const delBtn = document.createElement('button');
-      delBtn.className = 'su-icon-btn'; delBtn.textContent = '✕';
-      delBtn.addEventListener('click', () => { state.produccion.splice(idx, 1); persist(); renderProduccion(); renderStats(); });
-      tdDel.appendChild(delBtn);
-      tr.appendChild(tdDel);
-
-      body.appendChild(tr);
-    });
-  }
-  document.getElementById('su-add-prod').addEventListener('click', () => {
-    state.produccion.push({ vehiculo: '', fotos: false, video: false, edicion: false, copy: false, miniatura: false, programado: false, publicado: false, link: '', fechaInicio: new Date().toISOString().slice(0,10) });
-    persist(); renderProduccion(); renderStats();
-  });
-
-  // ---------- BANCO DE IDEAS ----------
-  function renderIdeas() {
-    const body = document.getElementById('su-ideas-body');
-    body.innerHTML = '';
-    state.ideas.forEach((row, idx) => {
-      const tr = document.createElement('tr');
-
-      const tdIdea = document.createElement('td');
-      const ideaInput = document.createElement('input');
-      ideaInput.type = 'text'; ideaInput.value = row.idea; ideaInput.placeholder = 'Idea';
-      ideaInput.addEventListener('input', () => { row.idea = ideaInput.value; persist(); });
-      tdIdea.appendChild(ideaInput);
-      tr.appendChild(tdIdea);
-
-      const tdPillar = document.createElement('td');
-      const pillarSel = document.createElement('select');
-      state.pillars.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.name; opt.textContent = p.name;
-        if (p.name === row.pilar) opt.selected = true;
-        pillarSel.appendChild(opt);
-      });
-      pillarSel.addEventListener('change', () => { row.pilar = pillarSel.value; persist(); });
-      tdPillar.appendChild(pillarSel);
-      tr.appendChild(tdPillar);
-
-      const tdFormat = document.createElement('td');
-      const formatSel = document.createElement('select');
-      ['Feed', 'Reel', 'Historia', 'WhatsApp'].forEach(f => {
-        const opt = document.createElement('option');
-        opt.value = f; opt.textContent = f;
-        if (f === row.formato) opt.selected = true;
-        formatSel.appendChild(opt);
-      });
-      formatSel.addEventListener('change', () => { row.formato = formatSel.value; persist(); });
-      tdFormat.appendChild(formatSel);
-      tr.appendChild(tdFormat);
-
-      ['gancho', 'cta'].forEach(field => {
-        const td = document.createElement('td');
-        const inp = document.createElement('input');
-        inp.type = 'text'; inp.value = row[field] || '';
-        inp.addEventListener('input', () => { row[field] = inp.value; persist(); });
-        td.appendChild(inp);
-        tr.appendChild(td);
-      });
-
-      const tdPrio = document.createElement('td');
-      const prioSel = document.createElement('select');
-      ['Alta', 'Media', 'Baja'].forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p; opt.textContent = p;
-        if (p === row.prioridad) opt.selected = true;
-        prioSel.appendChild(opt);
-      });
-      prioSel.className = 'su-prio-' + (row.prioridad || 'media').toLowerCase();
-      prioSel.addEventListener('change', () => {
-        row.prioridad = prioSel.value;
-        prioSel.className = 'su-prio-' + prioSel.value.toLowerCase();
-        persist();
-      });
-      tdPrio.appendChild(prioSel);
-      tr.appendChild(tdPrio);
-
-      const tdEstado = document.createElement('td');
-      const estadoSel = document.createElement('select');
-      ['Idea', 'Aprobada', 'En producción', 'Descartada'].forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s; opt.textContent = s;
-        if (s === row.estado) opt.selected = true;
-        estadoSel.appendChild(opt);
-      });
-      estadoSel.addEventListener('change', () => { row.estado = estadoSel.value; persist(); });
-      tdEstado.appendChild(estadoSel);
-      tr.appendChild(tdEstado);
-
-      const tdNotas = document.createElement('td');
-      const notasInput = document.createElement('input');
-      notasInput.type = 'text'; notasInput.value = row.notas || '';
-      notasInput.addEventListener('input', () => { row.notas = notasInput.value; persist(); });
-      tdNotas.appendChild(notasInput);
-      tr.appendChild(tdNotas);
-
-      const tdDel = document.createElement('td');
-      const delBtn = document.createElement('button');
-      delBtn.className = 'su-icon-btn'; delBtn.textContent = '✕';
-      delBtn.addEventListener('click', () => { state.ideas.splice(idx, 1); persist(); renderIdeas(); });
-      tdDel.appendChild(delBtn);
-      tr.appendChild(tdDel);
-
-      body.appendChild(tr);
-    });
-  }
-  document.getElementById('su-add-idea').addEventListener('click', () => {
-    state.ideas.push({ idea: '', pilar: state.pillars[0] ? state.pillars[0].name : '', formato: 'Feed', gancho: '', cta: '', prioridad: 'Media', estado: 'Idea', notas: '' });
-    persist(); renderIdeas();
-  });
-
-  // ---------- DASHBOARD ----------
-  function renderStats() {
-    const grid = document.getElementById('su-stats-grid');
-    if (!grid) return;
-    let allEvents = [];
-    Object.values(state.events).forEach(list => { allEvents = allEvents.concat(list); });
-
-    const planificadas = allEvents.filter(e => e.status !== 'publicado').length;
-    const realizadas = allEvents.filter(e => e.status === 'publicado').length;
-    const reelsPendientes = allEvents.filter(e => e.format === 'Reel' && e.status !== 'publicado').length;
-    const historiasPendientes = allEvents.filter(e => e.format === 'Historia' && e.status !== 'publicado').length;
-    const vehiculosPublicados = state.produccion.filter(v => v.publicado).length;
-    const vehiculosPendientes = state.produccion.filter(v => !v.publicado).length;
-
-    const stats = [
-      { num: planificadas, label: 'Publicaciones planificadas', color: '#0B2A55' },
-      { num: realizadas, label: 'Publicaciones realizadas', color: '#2E9E68' },
-      { num: reelsPendientes, label: 'Reels pendientes', color: '#E29A2E' },
-      { num: historiasPendientes, label: 'Historias pendientes', color: '#1E88A8' },
-      { num: vehiculosPublicados, label: 'Vehículos publicados', color: '#2E9E68' },
-      { num: vehiculosPendientes, label: 'Vehículos pendientes', color: '#C24C3F' }
-    ];
-
-    grid.innerHTML = '';
-    stats.forEach(s => {
-      const card = document.createElement('div');
-      card.className = 'su-stat-card';
-      card.style.setProperty('--stat-color', s.color);
-      card.innerHTML = `<div class="su-stat-num">${s.num}</div><div class="su-stat-label">${s.label}</div>`;
-      grid.appendChild(card);
-    });
-
-    // Hoy: publicaciones programadas para el día actual
-    const todayList = document.getElementById('su-today-list');
-    if (todayList) {
-      const todayKey = dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-      const todayEvents = state.events[todayKey] || [];
-      if (todayEvents.length === 0) {
-        todayList.innerHTML = '<p class="su-empty-note">No tenés publicaciones cargadas para hoy.</p>';
-      } else {
-        todayList.innerHTML = todayEvents.map(ev =>
-          `<div class="su-today-item"><span class="su-today-time">${ev.time || '--:--'}</span><span>${ev.title} <span style="color:var(--ink-soft);">· ${ev.format}</span></span></div>`
-        ).join('');
-      }
-    }
-
-    // Vehículos atrasados
-    const overdueList = document.getElementById('su-overdue-list');
-    if (overdueList) {
-      const overdue = state.produccion.filter(v => !v.publicado && daysSince(v.fechaInicio) >= OVERDUE_DAYS);
-      if (overdue.length === 0) {
-        overdueList.innerHTML = '<p class="su-empty-note">Ningún vehículo atrasado por ahora 👍</p>';
-      } else {
-        overdueList.innerHTML = overdue.map(v =>
-          `<div class="su-overdue-item">⚠ ${v.vehiculo || 'Sin nombre'} — ${daysSince(v.fechaInicio)} días sin publicar</div>`
-        ).join('');
-      }
-    }
-
-    // Gráfico: publicaciones realizadas por mes (últimos 6 meses con datos, o los últimos 6 del calendario)
-    const chartEl = document.getElementById('su-month-chart');
-    if (chartEl) {
-      const now = new Date();
-      const months = [];
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        months.push({ key: monthKey(d), label: MONTHS_ES[d.getMonth()].slice(0, 3) });
-      }
-      const counts = months.map(m => {
-        let c = 0;
-        Object.keys(state.events).forEach(key => {
-          if (key.startsWith(m.key) ) {
-            c += state.events[key].filter(e => e.status === 'publicado').length;
-          }
-        });
-        return c;
-      });
-      const max = Math.max(1, ...counts);
-      chartEl.innerHTML = months.map((m, i) => {
-        const h = Math.max(3, Math.round((counts[i] / max) * 100));
-        return `<div class="su-chart-col"><span class="su-chart-num">${counts[i]}</span><div class="su-chart-bar" style="height:${h}px;"></div><span class="su-chart-label">${m.label}</span></div>`;
-      }).join('');
-    }
-  }
-
-  // ---------- CALENDARIO (month view) ----------
-  function monthKey(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
-  function pad(n) { return String(n).padStart(2, '0'); }
-  function dateKey(y, m, d) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
-
-  function pillarColor(name) {
-    const p = state.pillars.find(p => p.name === name);
-    return p ? p.color : '#8C96A6';
-  }
-
-  function renderMonth() {
-    const [y, m] = state.currentMonth.split('-').map(Number);
-    const monthIdx = m - 1;
-    document.getElementById('su-month-label').textContent = MONTHS_ES[monthIdx] + ' ' + y;
-
-    const grid = document.getElementById('su-month-grid');
-    grid.innerHTML = '';
-    DOW_ES.forEach(d => {
-      const el = document.createElement('div');
-      el.className = 'su-dow';
-      el.textContent = d;
-      grid.appendChild(el);
-    });
-
-    const firstOfMonth = new Date(y, monthIdx, 1);
-    let startOffset = firstOfMonth.getDay() - 1; // Monday = 0
-    if (startOffset < 0) startOffset = 6;
-    const daysInMonth = new Date(y, monthIdx + 1, 0).getDate();
-    const daysInPrevMonth = new Date(y, monthIdx, 0).getDate();
-
-    const todayStr = dateKey(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
-
-    const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
-    for (let i = 0; i < totalCells; i++) {
-      const dayNum = i - startOffset + 1;
-      const cell = document.createElement('div');
-      let cellY = y, cellM = monthIdx, cellD = dayNum;
-      let outside = false;
-      if (dayNum < 1) {
-        cellM = monthIdx - 1; cellD = daysInPrevMonth + dayNum;
-        if (cellM < 0) { cellM = 11; cellY = y - 1; }
-        outside = true;
-      } else if (dayNum > daysInMonth) {
-        cellD = dayNum - daysInMonth; cellM = monthIdx + 1;
-        if (cellM > 11) { cellM = 0; cellY = y + 1; }
-        outside = true;
-      }
-      const key = dateKey(cellY, cellM, cellD);
-      cell.className = 'su-day-cell' + (outside ? ' su-outside' : '') + (key === todayStr ? ' su-today' : '');
-
-      const numRow = document.createElement('div');
-      numRow.className = 'su-day-num-row';
-      const numSpan = document.createElement('span');
-      numSpan.className = 'su-day-num';
-      numSpan.textContent = cellD;
-      const addBtn = document.createElement('button');
-      addBtn.className = 'su-day-add';
-      addBtn.textContent = '+';
-      addBtn.addEventListener('click', () => openEventModal(key, null));
-      numRow.appendChild(numSpan);
-      numRow.appendChild(addBtn);
-      cell.appendChild(numRow);
-
-      const dayEvents = state.events[key] || [];
-      dayEvents.forEach(ev => {
-        const chip = document.createElement('div');
-        chip.className = 'su-event-chip ev-' + ev.status;
-        chip.textContent = (ev.time ? ev.time + ' ' : '') + ev.title;
-        chip.title = ev.title;
-        chip.addEventListener('click', () => openEventModal(key, ev.id));
-        cell.appendChild(chip);
-      });
-
-      grid.appendChild(cell);
-    }
-  }
-
-  document.getElementById('su-prev-month').addEventListener('click', () => {
-    const [y, m] = state.currentMonth.split('-').map(Number);
-    const d = new Date(y, m - 2, 1);
-    state.currentMonth = monthKey(d);
-    persist(); renderMonth();
-  });
-  document.getElementById('su-next-month').addEventListener('click', () => {
-    const [y, m] = state.currentMonth.split('-').map(Number);
-    const d = new Date(y, m, 1);
-    state.currentMonth = monthKey(d);
-    persist(); renderMonth();
-  });
-
-  // ---------- Event modal ----------
-  let modalCtx = { dateKey: null, eventId: null };
-  const overlay = document.getElementById('su-modal-overlay');
-
-  function openEventModal(key, eventId) {
-    modalCtx = { dateKey: key, eventId };
-    renderEventPillarOptions();
-    const dayEvents = state.events[key] || [];
-    const ev = eventId ? dayEvents.find(e => e.id === eventId) : null;
-
-    document.getElementById('su-modal-title').textContent = ev ? 'Editar publicación' : 'Nueva publicación — ' + key;
-    document.getElementById('ev-title').value = ev ? ev.title : '';
-    document.getElementById('ev-vehiculo').value = ev ? (ev.vehiculo || '') : '';
-    document.getElementById('ev-pillar').value = ev ? ev.pillar : (state.pillars[0] ? state.pillars[0].name : '');
-    document.getElementById('ev-format').value = ev ? ev.format : 'Feed';
-    document.getElementById('ev-red').value = ev ? (ev.red || 'Instagram') : 'Instagram';
-    document.getElementById('ev-responsable').value = ev ? (ev.responsable || '') : '';
-    document.getElementById('ev-time').value = ev ? (ev.time || '') : '';
-    document.getElementById('ev-status').value = ev ? ev.status : 'idea';
-    document.getElementById('ev-note').value = ev ? (ev.note || '') : '';
-    document.getElementById('ev-delete').style.display = ev ? 'block' : 'none';
-    overlay.classList.add('open');
-  }
-  function closeModal() { overlay.classList.remove('open'); }
-
-  document.getElementById('ev-cancel').addEventListener('click', closeModal);
-  overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
-
-  document.getElementById('ev-save').addEventListener('click', () => {
-    const key = modalCtx.dateKey;
-    if (!state.events[key]) state.events[key] = [];
-    const title = document.getElementById('ev-title').value.trim() || 'Sin título';
-    const payload = {
-      title,
-      vehiculo: document.getElementById('ev-vehiculo').value,
-      pillar: document.getElementById('ev-pillar').value,
-      format: document.getElementById('ev-format').value,
-      red: document.getElementById('ev-red').value,
-      responsable: document.getElementById('ev-responsable').value,
-      time: document.getElementById('ev-time').value,
-      status: document.getElementById('ev-status').value,
-      note: document.getElementById('ev-note').value
-    };
-    if (modalCtx.eventId) {
-      const ev = state.events[key].find(e => e.id === modalCtx.eventId);
-      Object.assign(ev, payload);
-    } else {
-      payload.id = 'ev_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      state.events[key].push(payload);
-    }
-    persist();
-    renderMonth();
-    renderStats();
-    closeModal();
-  });
-
-  document.getElementById('ev-delete').addEventListener('click', () => {
-    const key = modalCtx.dateKey;
-    if (state.events[key] && modalCtx.eventId) {
-      state.events[key] = state.events[key].filter(e => e.id !== modalCtx.eventId);
-      persist();
-      renderMonth();
-      renderStats();
-    }
-    closeModal();
-  });
-
-  document.getElementById('ev-gcal').addEventListener('click', () => {
-    const key = modalCtx.dateKey; // YYYY-MM-DD
-    const title = document.getElementById('ev-title').value.trim() || 'Publicación Sevillano Usados';
-    const pillar = document.getElementById('ev-pillar').value;
-    const format = document.getElementById('ev-format').value;
-    const vehiculo = document.getElementById('ev-vehiculo').value;
-    const red = document.getElementById('ev-red').value;
-    const responsable = document.getElementById('ev-responsable').value;
-    const note = document.getElementById('ev-note').value;
-    const time = document.getElementById('ev-time').value; // HH:MM or ''
-    const details = encodeURIComponent(`Pilar: ${pillar}\nFormato: ${format}\nRed: ${red}${vehiculo ? '\nVehículo: ' + vehiculo : ''}${responsable ? '\nResponsable: ' + responsable : ''}\n${note || ''}`);
-    const text = encodeURIComponent(title);
-
-    const ymd = key.replace(/-/g, '');
-    let datesParam;
-    if (time) {
-      const [hh, mm] = time.split(':');
-      const startStr = `${ymd}T${hh}${mm}00`;
-      const endDate = new Date(key + 'T' + hh + ':' + mm + ':00');
-      endDate.setHours(endDate.getHours() + 1);
-      const endStr = endDate.getFullYear() + pad(endDate.getMonth() + 1) + pad(endDate.getDate()) + 'T' + pad(endDate.getHours()) + pad(endDate.getMinutes()) + '00';
-      datesParam = `${startStr}/${endStr}`;
-    } else {
-      const d = new Date(key + 'T00:00:00');
-      d.setDate(d.getDate() + 1);
-      const endYmd = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate());
-      datesParam = `${ymd}/${endYmd}`;
-    }
-    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${datesParam}&details=${details}`;
-    window.open(url, '_blank');
-  });
-
-  // ---------- Export month to .ics ----------
-  function icsEscape(str) {
-    return String(str || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
-  }
-  document.getElementById('su-export-ics').addEventListener('click', () => {
-    const [y, m] = state.currentMonth.split('-').map(Number);
-    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sevillano Usados//Content OS//ES'];
-    let count = 0;
-    Object.keys(state.events).forEach(key => {
-      const [ey, em] = key.split('-').map(Number);
-      if (ey !== y || em !== m) return;
-      state.events[key].forEach(ev => {
-        count++;
-        const ymd = key.replace(/-/g, '');
-        lines.push('BEGIN:VEVENT');
-        lines.push('UID:' + ev.id + '@sevillanousados');
-        if (ev.time) {
-          const [hh, mm] = ev.time.split(':');
-          lines.push(`DTSTART:${ymd}T${hh}${mm}00`);
-          const endDate = new Date(key + 'T' + hh + ':' + mm + ':00');
-          endDate.setHours(endDate.getHours() + 1);
-          const endYmd = endDate.getFullYear() + pad(endDate.getMonth() + 1) + pad(endDate.getDate());
-          const endHm = pad(endDate.getHours()) + pad(endDate.getMinutes()) + '00';
-          lines.push(`DTEND:${endYmd}T${endHm}`);
-        } else {
-          lines.push(`DTSTART;VALUE=DATE:${ymd}`);
-        }
-        lines.push('SUMMARY:' + icsEscape(ev.title));
-        lines.push('DESCRIPTION:' + icsEscape(`Pilar: ${ev.pillar}\nFormato: ${ev.format}\nRed: ${ev.red || ''}\nVehículo: ${ev.vehiculo || ''}\nResponsable: ${ev.responsable || ''}\nEstado: ${ev.status}\n${ev.note || ''}`));
-        lines.push('END:VEVENT');
-      });
-    });
-    lines.push('END:VCALENDAR');
-
-    if (count === 0) {
-      alert('No hay publicaciones cargadas este mes todavía.');
-      return;
-    }
-    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `sevillano-usados-${state.currentMonth}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  });
-
-  load();
-})();
+}
+document.getElementById("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;view=b.dataset.v;render();try{localStorage.setItem("cos_view",view)}catch(_){}};
+try{const v=localStorage.getItem("cos_view");if(v)view=v}catch(_){}
+document.getElementById("syncBtn").onclick=openSync;
+init();
 </script>
 </body>
 </html>
