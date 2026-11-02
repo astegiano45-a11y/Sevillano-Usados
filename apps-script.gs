@@ -108,6 +108,7 @@ function json_(obj) {
 const CAL_NAME = 'Marketing Ford Sevillano';
 const TZ = 'America/Argentina/Ushuaia';
 const PIL_EMOJI = { valor: '🔵', exp: '🟢', prod: '🟠' };
+const AREA_TAG = { tradicional: '[0KM] ', ovalo: '[PLAN ÓVALO] ', usados: '[USADOS] ', posventa: '[POSVENTA] ' };
 
 function cal_() {
   const props = PropertiesService.getScriptProperties();
@@ -139,7 +140,7 @@ function calSync_(sheet, it) {
   if (sheet === 'tasks' && it.done) return;
   let title, desc;
   if (sheet === 'posts') {
-    title = (PIL_EMOJI[it.pilar] || '📲') + ' ' + (it.title || 'Publicación') + ' · ' + (it.formato || '') + (it.red ? ' ' + it.red : '');
+    title = (PIL_EMOJI[it.pilar] || '📲') + ' ' + (AREA_TAG[it.area] || '') + (it.title || 'Publicación') + ' · ' + (it.formato || '') + (it.red ? ' ' + it.red : '');
     desc = 'Estado: ' + (it.estado || 'Idea') + (it.sub ? '\nSección: ' + it.sub : '') + (it.auto ? '\nVehículo: ' + it.auto : '') +
       (it.gancho ? '\n\nGancho: ' + it.gancho : '') + (it.guion ? '\n\nGuion:\n' + it.guion : '');
   } else {
