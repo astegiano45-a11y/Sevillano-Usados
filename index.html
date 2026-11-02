@@ -139,6 +139,15 @@ h2{font-size:18px;font-weight:700}
 .ev .ab{margin-right:4px}
 .filters .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);align-self:center;margin-right:2px}
 .filters button .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
+.ev.k-evento-bg{background:var(--prod-soft);color:var(--prod);border-color:transparent}
+.ev.k-reunion-bg{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.ev.k-recordatorio-bg{background:var(--exp-soft);color:var(--exp);border-color:transparent}
+.ev.span{border-radius:0;margin-inline:-7px;padding-inline:13px}
+.ev.span.s-first{border-radius:6px 0 0 6px;margin-left:0;padding-left:6px}
+.ev.span.s-last{border-radius:0 6px 6px 0;margin-right:0}
+.ev.span.s-first.s-last{border-radius:6px;margin-inline:0;padding-inline:6px}
+.k-recordatorio{color:var(--exp)}
+@media(max-width:700px){.ev.span{margin-inline:0;border-radius:6px;padding-inline:6px}}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -368,8 +377,8 @@ function vHoy(){
       ${ps.length?ps.map(p=>`<div data-post="${p.id}"><div class="t">${esc(p.title)}</div><div class="row" style="margin-top:4px">${areaB(p.area)}<span class="chip">${esc(p.estado||"Idea")}</span><span class="chip">${esc(p.formato||"")}</span></div></div>`).join(""):`<div class="empty">Sin publicación. Tocá para planificarla.</div>`}
     </div>`}).join("");
   const pend=S.tasks.filter(x=>!x.done).sort((a,b)=>(a.date||"9")+(a.time||"")>(b.date||"9")+(b.time||"")?1:-1);
-  const hoyT=pend.filter(x=>x.date&&x.date<=t);
-  const prox=pend.filter(x=>!x.date||x.date>t).slice(0,8);
+  const hoyT=S.tasks.filter(x=>(x.repeat||x.dateEnd)?occ(x,t):(!x.done&&x.date&&x.date<=t));
+  const prox=pend.filter(x=>!hoyT.includes(x)&&(!x.date||x.date>t||x.repeat)).slice(0,8);
   const atras=S.posts.filter(p=>p.date<t&&!["Publicado","Multimedios"].includes(p.estado));
   const mes=new Date().getMonth();const pubMes=S.posts.filter(p=>(p.estado==="Publicado"||p.estado==="Multimedios")&&parse(p.date).getMonth()===mes).length;
   const enProd=S.posts.filter(p=>!["Publicado","Multimedios","Idea"].includes(p.estado)).length;
@@ -394,15 +403,28 @@ function vHoy(){
     </section>
   </div>`;
 }
+const dayN=s=>Math.round(parse(s).getTime()/864e5);
+const REP={"":"No se repite",semanal:"Cada semana",quincenal:"Cada 2 semanas",mensual:"Cada mes"};
+function occ(x,s){
+  if(!x.date)return null;
+  const len=x.dateEnd&&x.dateEnd>x.date?dayN(x.dateEnd)-dayN(x.date):0;
+  if(x.repeatUntil&&s>x.repeatUntil&&!(s<=x.dateEnd))return null;
+  let start=null;
+  if(!x.repeat){if(s>=x.date&&dayN(s)-dayN(x.date)<=len)start=x.date}
+  else if(x.repeat==="mensual"){const a=parse(x.date),b=parse(s);for(const k of [0,-1]){const m=(b.getFullYear()-a.getFullYear())*12+b.getMonth()-a.getMonth()+k;if(m<0)continue;const c=new Date(a.getFullYear(),a.getMonth()+m,a.getDate());const cs=ymd(c);const off=dayN(s)-dayN(cs);if(off>=0&&off<=len&&(!x.repeatUntil||cs<=x.repeatUntil)){start=cs;break}}}
+  else{const step=x.repeat==="quincenal"?14:7;const d=dayN(s)-dayN(x.date);if(d>=0){const off=d%step;const cs=ymd(new Date(parse(x.date).getTime()+(d-off)*864e5));if(off<=len&&(!x.repeatUntil||cs<=x.repeatUntil))start=cs}}
+  if(!start)return null;
+  const i=dayN(s)-dayN(start);return {i,len,first:i===0,last:i===len};
+}
 function taskRow(x){return `<div class="item ${x.done?"done":""}" data-task="${x.id}"><button class="check ${x.done?"on":""}" data-toggle="${x.id}" aria-label="Marcar como hecha"></button><span class="when">${x.date?fmtDay(x.date):"Sin fecha"}${x.time?"<br>"+x.time:""}</span><div class="txt"><div class="kind k-${x.tipo||"tarea"}">${esc(x.tipo||"tarea")}</div><div class="t">${esc(x.title)}</div>${x.lugar?`<div class="sub" style="font-size:12px">${esc(x.lugar)}</div>`:""}</div></div>`}
 
 function evHtml(s,detail){
   const ps=calFilter==="tasks"?[]:S.posts.filter(p=>p.date===s&&(calFilter==="all"||p.pilar===calFilter)&&(areaFilter==="all"||p.area===areaFilter||(!p.area&&areaFilter==="general")));
-  const ts=areaFilter!=="all"?[]:calFilter==="all"||calFilter==="tasks"?S.tasks.filter(x=>x.date===s).sort((a,b)=>(a.time||"")>(b.time||"")?1:-1):[];
+  const ts=areaFilter!=="all"?[]:calFilter==="all"||calFilter==="tasks"?S.tasks.filter(x=>occ(x,s)).sort((a,b)=>(a.time||"")>(b.time||"")?1:-1):[];
   const done=p=>p.estado==="Publicado"||p.estado==="Multimedios";
-  if(!detail)return ps.map(p=>`<div class="ev ${p.pilar||"task"} ${done(p)?"pubd":""}" data-post="${p.id}" title="${esc((p.area?AREAS[p.area].short+" · ":"")+p.title)}">${areaB(p.area)}${esc(p.title)}</div>`).join("")+ts.map(x=>`<div class="ev task ${x.done?"pubd":""}" data-task="${x.id}">${x.time?x.time+" ":""}${esc(x.title)}</div>`).join("");
+  if(!detail)return ps.map(p=>`<div class="ev ${p.pilar||"task"} ${done(p)?"pubd":""}" data-post="${p.id}" title="${esc((p.area?AREAS[p.area].short+" · ":"")+p.title)}">${areaB(p.area)}${esc(p.title)}</div>`).join("")+ts.map(x=>{const o=occ(x,s);const sp=o.len?` span ${o.first?"s-first":""} ${o.last?"s-last":""}`:"";return `<div class="ev task k-${x.tipo||"tarea"}-bg${sp} ${x.done&&!x.repeat?"pubd":""}" data-task="${x.id}" title="${esc(x.title)}">${x.repeat?"↻ ":""}${o.first||!o.len?(x.time?x.time+" ":"")+esc(x.title):"…"+esc(x.title)}</div>`}).join("");
   return ps.map(p=>`<div class="wev ${p.pilar||""}" data-post="${p.id}"><div class="wt ${done(p)?"pubd":""}">${esc(p.title)}</div><div class="row" style="gap:4px">${areaB(p.area)}${p.sub?`<span class="chip">${esc(p.sub)}</span>`:""}<span class="chip">${esc(p.estado||"Idea")}</span><span class="chip">${esc(p.formato||"")}${p.red?" · "+esc(p.red):""}</span></div>${p.gancho?`<div class="wg">“${esc(p.gancho)}”</div>`:""}</div>`).join("")
-   +ts.map(x=>`<div class="wev task ${x.done?"pubd":""}" data-task="${x.id}"><div class="kind k-${x.tipo||"tarea"}">${x.time?x.time+" · ":""}${esc(x.tipo||"tarea")}</div><div class="wt">${esc(x.title)}</div>${x.lugar?`<div class="wg">${esc(x.lugar)}</div>`:""}</div>`).join("");
+   +ts.map(x=>{const o=occ(x,s);return `<div class="wev task k-${x.tipo||"tarea"}-bg ${x.done&&!x.repeat?"pubd":""}" data-task="${x.id}"><div class="kind k-${x.tipo||"tarea"}">${x.time?x.time+" · ":""}${esc(x.tipo||"tarea")}${o.len?` · día ${o.i+1}/${o.len+1}`:""}${x.repeat?" · ↻":""}</div><div class="wt">${esc(x.title)}</div>${x.lugar?`<div class="wg">${esc(x.lugar)}</div>`:""}</div>`}).join("");
 }
 function vCal(){
   const t=todayS(),y=calMonth.getFullYear(),mo=calMonth.getMonth();
@@ -513,16 +535,21 @@ function openTask(id,date){
   frm.innerHTML=`<div class="mh"><h2>${isNew?"Nueva tarea, reunión o evento":"Editar"}</h2></div>
   <div class="mb">
     <label class="full">Qué<input id="t_title" required value="${esc(x.title)}" placeholder="Ej.: Reunión de marketing con Santiago"></label>
-    <label>Tipo<select id="t_tipo">${["tarea","reunion","evento"].map(t=>`<option value="${t}" ${x.tipo===t?"selected":""}>${{tarea:"Tarea",reunion:"Reunión",evento:"Evento"}[t]}</option>`).join("")}</select></label>
-    <label>Fecha<input type="date" id="t_date" value="${esc(x.date)}"></label>
+    <label>Tipo<select id="t_tipo">${["tarea","reunion","evento","recordatorio"].map(t=>`<option value="${t}" ${x.tipo===t?"selected":""}>${{tarea:"Tarea",reunion:"Reunión",evento:"Evento",recordatorio:"Recordatorio / nota"}[t]}</option>`).join("")}</select></label>
     <label>Hora<input type="time" id="t_time" value="${esc(x.time)}"></label>
+    <label>Desde<input type="date" id="t_date" value="${esc(x.date)}"></label>
+    <label>Hasta (si dura varios días)<input type="date" id="t_dateEnd" value="${esc(x.dateEnd)}"></label>
+    <label>Repetir<select id="t_repeat">${Object.entries(REP).map(([k,v])=>`<option value="${k}" ${(x.repeat||"")===k?"selected":""}>${v}</option>`).join("")}</select></label>
+    <label>Repetir hasta (opcional)<input type="date" id="t_repeatUntil" value="${esc(x.repeatUntil)}"></label>
+    <label class="full">Aviso al celular<select id="t_aviso">${[["","Sí: 1 hora y 30 min antes (o el día anterior a las 9 si no tiene hora)"],["no","No avisar"]].map(([k,v])=>`<option value="${k}" ${(x.aviso||"")===k?"selected":""}>${v}</option>`).join("")}</select></label>
     <label>Lugar / con quién<input id="t_lugar" value="${esc(x.lugar)}"></label>
     <label class="full">Notas<textarea id="t_notas">${esc(x.notas)}</textarea></label>
   </div>
   <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><a class="btn" target="_blank" rel="noopener" href="${gcal(x.title||"",x.date||todayS(),x.time,(x.lugar||"")+"\n"+(x.notas||""))}">Agregar a Google Calendar</a>`}
   <span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
   frm.onsubmit=e=>{e.preventDefault();const v=k=>frm.querySelector("#t_"+k).value.trim();if(!v("title"))return;
-    save("tasks",{...x,title:v("title"),tipo:v("tipo"),date:v("date"),time:v("time"),lugar:v("lugar"),notas:v("notas")});dlg.close();toast("Guardado")};
+    if(v("dateEnd")&&v("dateEnd")<v("date")){toast("La fecha Hasta tiene que ser después de Desde");return}
+    save("tasks",{...x,title:v("title"),tipo:v("tipo"),date:v("date"),dateEnd:v("dateEnd"),repeat:v("repeat"),repeatUntil:v("repeatUntil"),aviso:v("aviso"),time:v("time"),lugar:v("lugar"),notas:v("notas")});dlg.close();toast("Guardado")};
   wireModal(()=>{remove("tasks",x.id);toast("Borrado")});
   dlg.showModal();
 }

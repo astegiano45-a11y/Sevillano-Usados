@@ -121,7 +121,7 @@ function cal_() {
   return cal;
 }
 
-function when_(date, time) {
+function when_UNUSED(date, time) {
   const [y, m, d] = date.split('-').map(Number);
   const [hh, mm] = (time || '10:00').split(':').map(Number);
   const s = new Date(y, m - 1, d, hh, mm);
@@ -134,34 +134,63 @@ function calSync_(sheet, it) {
   const props = PropertiesService.getScriptProperties();
   const key = 'ev_' + sheet + '_' + it.id;
   const cal = cal_();
-  const old = props.getProperty(key);
-  if (old) { try { cal.getEventById(old).deleteEvent(); } catch (e) {} props.deleteProperty(key); }
+  removeEv_(cal, props.getProperty(key));
+  props.deleteProperty(key);
   if (!it.date) return;
-  if (sheet === 'tasks' && it.done) return;
+  if (sheet === 'tasks' && it.done && !it.repeat) return;
   let title, desc;
   if (sheet === 'posts') {
     title = (PIL_EMOJI[it.pilar] || '📲') + ' ' + (AREA_TAG[it.area] || '') + (it.title || 'Publicación') + ' · ' + (it.formato || '') + (it.red ? ' ' + it.red : '');
     desc = 'Estado: ' + (it.estado || 'Idea') + (it.sub ? '\nSección: ' + it.sub : '') + (it.auto ? '\nVehículo: ' + it.auto : '') +
       (it.gancho ? '\n\nGancho: ' + it.gancho : '') + (it.guion ? '\n\nGuion:\n' + it.guion : '');
   } else {
-    title = ({ reunion: '👥 ', evento: '📍 ', tarea: '✅ ' }[it.tipo] || '✅ ') + (it.title || '');
+    title = ({ reunion: '👥 ', evento: '📍 ', tarea: '✅ ', recordatorio: '🔔 ' }[it.tipo] || '✅ ') + (it.title || '');
     desc = (it.lugar ? 'Lugar / con quién: ' + it.lugar + '\n' : '') + (it.notas || '');
   }
-  const [s, e] = when_(it.date, it.time);
   const opts = { description: desc };
   if (sheet === 'tasks' && it.lugar) opts.location = it.lugar;
-  const ev = cal.createEvent(title, s, e, opts);
+  const d0 = ymd_(it.date);
+  const multi = sheet === 'tasks' && it.dateEnd && it.dateEnd > it.date;
+  const dEnd = multi ? ymd_(it.dateEnd) : d0;
+  let rec = null;
+  if (sheet === 'tasks' && it.repeat) {
+    rec = CalendarApp.newRecurrence();
+    const rule = it.repeat === 'mensual' ? rec.addMonthlyRule() : rec.addWeeklyRule().interval(it.repeat === 'quincenal' ? 2 : 1);
+    if (it.repeatUntil) rule.until(new Date(ymd_(it.repeatUntil).getTime() + 86400000));
+  }
+  let ev;
+  if (sheet === 'tasks' && !it.time) {
+    const endEx = new Date(dEnd.getTime() + 86400000);
+    ev = rec ? cal.createAllDayEventSeries(title, d0, endEx, rec, opts) : cal.createAllDayEvent(title, d0, endEx, opts);
+  } else {
+    const [hh, mm] = (it.time || '10:00').split(':').map(Number);
+    const s = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), hh, mm);
+    const e = multi ? new Date(dEnd.getFullYear(), dEnd.getMonth(), dEnd.getDate(), hh + 1, mm) : new Date(s.getTime() + (it.time ? 60 : 30) * 60000);
+    ev = rec ? cal.createEventSeries(title, s, e, rec, opts) : cal.createEvent(title, s, e, opts);
+  }
   ev.removeAllReminders();
-  ev.addPopupReminder(30);
-  ev.addPopupReminder(sheet === 'posts' ? 24 * 60 : 60);
-  props.setProperty(key, ev.getId());
+  if (it.aviso !== 'no') {
+    if (sheet === 'tasks' && !it.time) ev.addPopupReminder(15 * 60);
+    else { ev.addPopupReminder(30); ev.addPopupReminder(sheet === 'posts' ? 24 * 60 : 60); }
+  }
+  props.setProperty(key, (rec ? 'S:' : '') + ev.getId());
+}
+
+function ymd_(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+
+function removeEv_(cal, stored) {
+  if (!stored) return;
+  try {
+    if (stored.indexOf('S:') === 0) cal.getEventSeriesById(stored.slice(2)).deleteEventSeries();
+    else cal.getEventById(stored).deleteEvent();
+  } catch (e) {}
 }
 
 function calDelete_(sheet, id) {
   const props = PropertiesService.getScriptProperties();
   const key = 'ev_' + sheet + '_' + id;
-  const old = props.getProperty(key);
-  if (old) { try { cal_().getEventById(old).deleteEvent(); } catch (e) {} props.deleteProperty(key); }
+  removeEv_(cal_(), props.getProperty(key));
+  props.deleteProperty(key);
 }
 
 /** Ejecutar a mano una vez: pide permisos y pasa todo lo cargado al calendario. */
