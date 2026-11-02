@@ -110,6 +110,27 @@ h2{font-size:18px;font-weight:700}
 .ev.pubd{text-decoration:line-through;opacity:.7}
 .cell .tag{font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
 @media(max-width:700px){.cal-head{display:none}.cal{grid-template-columns:1fr}.cell{min-height:auto}.cell.out{display:none}.cell .add{opacity:1}}
+.week7{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:14px}
+.wday{background:var(--surface);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:420px;min-width:0}
+.wday.has-valor{border-top:4px solid var(--valor)}.wday.has-exp{border-top:4px solid var(--exp)}.wday.has-prod{border-top:4px solid var(--prod)}
+.wday.today{box-shadow:0 0 0 2px var(--accent)}
+.wh{display:flex;align-items:baseline;gap:6px;padding:10px 10px 6px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.wd{font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.wn{font-family:var(--f-display);font-weight:900;font-size:22px}
+.wday.today .wn{color:var(--accent)}
+.wh .tag{margin-left:auto;font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+.wbody{display:flex;flex-direction:column;gap:6px;padding:8px;flex:1}
+.wev{border-radius:8px;padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:5px;border:1px solid var(--line);background:var(--bg)}
+.wev.valor{background:var(--valor-soft);border-color:transparent}.wev.exp{background:var(--exp-soft);border-color:transparent}.wev.prod{background:var(--prod-soft);border-color:transparent}
+.wev .wt{font-weight:700;font-size:13px;line-height:1.3;overflow-wrap:anywhere}
+.wev.valor .wt{color:var(--valor)}.wev.exp .wt{color:var(--exp)}.wev.prod .wt{color:var(--prod)}
+.wev .chip{font-size:10px;padding:1px 6px;background:var(--surface)}
+.wg{font-size:11.5px;color:var(--muted);font-style:italic;overflow-wrap:anywhere}
+.wev.pubd{opacity:.6}.wt.pubd,.wev.pubd .wt{text-decoration:line-through}
+.wempty{color:var(--line);text-align:center;padding-top:20px}
+.wadd{border:0;border-top:1px dashed var(--line);background:none;color:var(--muted);font:600 12px var(--f-body);padding:8px;cursor:pointer;border-radius:0 0 12px 12px}
+.wadd:hover{color:var(--accent);background:var(--accent-soft)}
+@media(max-width:900px){.week7{grid-template-columns:1fr}.wday{min-height:auto}}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -196,6 +217,7 @@ const DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
 const S={posts:[],tasks:[],ideas:[],brand:null};
+let calMode=(()=>{try{return localStorage.getItem("cos_calmode")||"semana"}catch(e){return "semana"}})();
 let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
 const DEF_BRAND={tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
   metas:["3 publicaciones por semana (L/M/V)","Cada auto del stock publicado al menos una vez por mes","Responder consultas de WhatsApp en menos de 1 hora"],
@@ -363,25 +385,39 @@ function vHoy(){
 }
 function taskRow(x){return `<div class="item ${x.done?"done":""}" data-task="${x.id}"><button class="check ${x.done?"on":""}" data-toggle="${x.id}" aria-label="Marcar como hecha"></button><span class="when">${x.date?fmtDay(x.date):"Sin fecha"}${x.time?"<br>"+x.time:""}</span><div class="txt"><div class="kind k-${x.tipo||"tarea"}">${esc(x.tipo||"tarea")}</div><div class="t">${esc(x.title)}</div>${x.lugar?`<div class="sub" style="font-size:12px">${esc(x.lugar)}</div>`:""}</div></div>`}
 
+function evHtml(s,detail){
+  const ps=calFilter==="tasks"?[]:S.posts.filter(p=>p.date===s&&(calFilter==="all"||p.pilar===calFilter));
+  const ts=calFilter==="all"||calFilter==="tasks"?S.tasks.filter(x=>x.date===s).sort((a,b)=>(a.time||"")>(b.time||"")?1:-1):[];
+  const done=p=>p.estado==="Publicado"||p.estado==="Multimedios";
+  if(!detail)return ps.map(p=>`<div class="ev ${p.pilar||"task"} ${done(p)?"pubd":""}" data-post="${p.id}" title="${esc(p.title)}">${esc(p.title)}</div>`).join("")+ts.map(x=>`<div class="ev task ${x.done?"pubd":""}" data-task="${x.id}">${x.time?x.time+" ":""}${esc(x.title)}</div>`).join("");
+  return ps.map(p=>`<div class="wev ${p.pilar||""}" data-post="${p.id}"><div class="wt ${done(p)?"pubd":""}">${esc(p.title)}</div><div class="row" style="gap:4px">${p.sub?`<span class="chip">${esc(p.sub)}</span>`:""}<span class="chip">${esc(p.estado||"Idea")}</span><span class="chip">${esc(p.formato||"")}${p.red?" · "+esc(p.red):""}</span></div>${p.gancho?`<div class="wg">“${esc(p.gancho)}”</div>`:""}</div>`).join("")
+   +ts.map(x=>`<div class="wev task ${x.done?"pubd":""}" data-task="${x.id}"><div class="kind k-${x.tipo||"tarea"}">${x.time?x.time+" · ":""}${esc(x.tipo||"tarea")}</div><div class="wt">${esc(x.title)}</div>${x.lugar?`<div class="wg">${esc(x.lugar)}</div>`:""}</div>`).join("");
+}
 function vCal(){
-  const y=calMonth.getFullYear(),mo=calMonth.getMonth();
-  const first=new Date(y,mo,1);const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
-  const t=todayS();let cells="";
-  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const s=ymd(d);const out=d.getMonth()!==mo;
-    if(i>=35&&out&&d.getDate()>7)break;
-    const pk=pillarForDate(s);
-    const ps=calFilter==="tasks"?[]:S.posts.filter(p=>p.date===s&&(calFilter==="all"||p.pilar===calFilter));
-    const ts=calFilter==="all"||calFilter==="tasks"?S.tasks.filter(x=>x.date===s):[];
-    cells+=`<div class="cell ${out?"out":""} ${s===t?"today":""}"><div class="num"><b>${DIAS[d.getDay()]} ${d.getDate()}</b>${pk?`<span class="tag" style="color:var(--${pk})">${PIL[pk].short}</span>`:""}<button class="add" data-newpost="${s}" aria-label="Agregar en ${s}">+</button></div>
-      ${ps.map(p=>`<div class="ev ${p.pilar||"task"} ${p.estado==="Publicado"||p.estado==="Multimedios"?"pubd":""}" data-post="${p.id}" title="${esc(p.title)}">${esc(p.title)}</div>`).join("")}
-      ${ts.map(x=>`<div class="ev task ${x.done?"pubd":""}" data-task="${x.id}">${x.time?x.time+" ":""}${esc(x.title)}</div>`).join("")}</div>`;}
+  const t=todayS(),y=calMonth.getFullYear(),mo=calMonth.getMonth();
   const f=(k,l)=>`<button aria-pressed="${calFilter===k}" data-calf="${k}">${l}</button>`;
-  return `<div class="row"><h1 style="text-transform:capitalize">${MESES[mo]} ${y}</h1><span class="sp"></span>
-    <button class="btn" data-cal="-1" aria-label="Mes anterior">‹</button><button class="btn" data-cal="0">Hoy</button><button class="btn" data-cal="1" aria-label="Mes siguiente">›</button>
+  const seg=`<div class="seg"><button aria-pressed="${calMode==="semana"}" data-mode="semana">Semana</button><button aria-pressed="${calMode==="mes"}" data-mode="mes">Mes</button></div>`;
+  let title,body;
+  if(calMode==="semana"){
+    const mon=new Date(calMonth);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));
+    const days=[...Array(7)].map((_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d});
+    const e=days[6];
+    title=`${mon.getDate()}${mon.getMonth()!==e.getMonth()?" "+MESES[mon.getMonth()].slice(0,3):""} – ${e.getDate()} ${MESES[e.getMonth()]} ${e.getFullYear()}`;
+    body=`<div class="week7">${days.map(d=>{const s=ymd(d);const pk=pillarForDate(s);
+      return `<div class="wday ${s===t?"today":""} ${pk?"has-"+pk:""}"><div class="wh"><span class="wd">${DIAS[d.getDay()]}</span><span class="wn">${d.getDate()}</span>${pk?`<span class="tag" style="color:var(--${pk})">${PIL[pk].short}</span>`:""}</div>
+        <div class="wbody">${evHtml(s,true)||`<div class="wempty">—</div>`}</div><button class="wadd" data-newpost="${s}">+ Agregar</button></div>`}).join("")}</div>`;
+  }else{
+    const first=new Date(y,mo,1);const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));let cells="";
+    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);const s=ymd(d);const out=d.getMonth()!==mo;
+      if(i>=35&&out&&d.getDate()>7)break;const pk=pillarForDate(s);
+      cells+=`<div class="cell ${out?"out":""} ${s===t?"today":""}"><div class="num"><b>${DIAS[d.getDay()]} ${d.getDate()}</b>${pk?`<span class="tag" style="color:var(--${pk})">${PIL[pk].short}</span>`:""}<button class="add" data-newpost="${s}" aria-label="Agregar en ${s}">+</button></div>${evHtml(s,false)}</div>`;}
+    title=`<span style="text-transform:capitalize">${MESES[mo]}</span> ${y}`;
+    body=`<div class="cal-head">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=>`<div>${d}</div>`).join("")}</div><div class="cal">${cells}</div>`;
+  }
+  return `<div class="row"><h1>${title}</h1><span class="sp"></span>${seg}
+    <button class="btn" data-cal="-1" aria-label="Anterior">‹</button><button class="btn" data-cal="0">Hoy</button><button class="btn" data-cal="1" aria-label="Siguiente">›</button>
     <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn pri" data-act="newpost">+ Publicación</button></div>
-    <div class="filters">${f("all","Todo")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}${f("tasks","Tareas y reuniones")}</div>
-    <div class="cal-head">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=>`<div>${d}</div>`).join("")}</div>
-    <div class="cal">${cells}</div>`;
+    <div class="filters">${f("all","Todo")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}${f("tasks","Tareas y reuniones")}</div>${body}`;
 }
 function vProd(){
   const cols=ESTADOS.map(e=>{const ps=S.posts.filter(p=>(p.estado||"Idea")===e).sort((a,b)=>a.date>b.date?1:-1);
@@ -508,7 +544,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-newpost],[data-act],[data-cal],[data-calf],[data-ideaf],[data-addsub],[data-addmeta]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-newpost],[data-act],[data-cal],[data-mode],[data-calf],[data-ideaf],[data-addsub],[data-addmeta]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -519,7 +555,8 @@ function bind(){
     if(d.act==="newpost")return openPost(null,null);
     if(d.act==="newtask")return openTask(null);
     if(d.act==="newidea")return openIdea(null);
-    if(d.cal!==undefined){calMonth=d.cal==="0"?new Date():new Date(calMonth.getFullYear(),calMonth.getMonth()+Number(d.cal),1);render();return}
+    if(d.cal!==undefined){if(d.cal==="0")calMonth=new Date();else if(calMode==="semana"){const n=new Date(calMonth);n.setDate(n.getDate()+7*Number(d.cal));calMonth=n}else calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+Number(d.cal),1);render();return}
+    if(d.mode){calMode=d.mode;try{localStorage.setItem("cos_calmode",calMode)}catch(_){}render();return}
     if(d.calf){calFilter=d.calf;render();return}
     if(d.ideaf){ideaFilter=d.ideaf;render();return}
     if(d.addsub!==undefined){const b=structuredClone(brand());b.subs[d.addsub]=[...b.subs[d.addsub],"Nuevo subtema"];saveBrand(b);return}
