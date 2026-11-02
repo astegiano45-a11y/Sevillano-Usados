@@ -27,8 +27,8 @@ function doPost(e) {
     const body = JSON.parse(e.postData.contents);
     if (body.action === 'all') return json_({ ok: true, data: readAll_() });
     if (!SHEETS[body.sheet]) return json_({ ok: false, error: 'Hoja desconocida' });
-    if (body.action === 'upsert') { upsert_(body.sheet, body.item); return json_({ ok: true }); }
-    if (body.action === 'delete') { del_(body.sheet, body.id); return json_({ ok: true }); }
+    if (body.action === 'upsert') { upsert_(body.sheet, body.item); try { calSync_(body.sheet, body.item); } catch (e) {} return json_({ ok: true }); }
+    if (body.action === 'delete') { del_(body.sheet, body.id); try { calDelete_(body.sheet, body.id); } catch (e) {} return json_({ ok: true }); }
     return json_({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
     return json_({ ok: false, error: String(err) });
@@ -98,4 +98,75 @@ function del_(name, id) {
 
 function json_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+
+/* ================= GOOGLE CALENDAR =================
+ * Crea y mantiene un calendario "Marketing Ford Sevillano".
+ * Primera vez: elegí la función syncAll en el menú de arriba y tocá Ejecutar (pide permiso de Calendar).
+ */
+const CAL_NAME = 'Marketing Ford Sevillano';
+const TZ = 'America/Argentina/Ushuaia';
+const PIL_EMOJI = { valor: '🔵', exp: '🟢', prod: '🟠' };
+
+function cal_() {
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty('calId');
+  let cal = id ? CalendarApp.getCalendarById(id) : null;
+  if (!cal) {
+    cal = CalendarApp.createCalendar(CAL_NAME, { timeZone: TZ, color: CalendarApp.Color.BLUE });
+    props.setProperty('calId', cal.getId());
+  }
+  return cal;
+}
+
+function when_(date, time) {
+  const [y, m, d] = date.split('-').map(Number);
+  const [hh, mm] = (time || '10:00').split(':').map(Number);
+  const s = new Date(y, m - 1, d, hh, mm);
+  const e = new Date(s.getTime() + (time ? 60 : 30) * 60000);
+  return [s, e];
+}
+
+function calSync_(sheet, it) {
+  if (sheet !== 'posts' && sheet !== 'tasks') return;
+  const props = PropertiesService.getScriptProperties();
+  const key = 'ev_' + sheet + '_' + it.id;
+  const cal = cal_();
+  const old = props.getProperty(key);
+  if (old) { try { cal.getEventById(old).deleteEvent(); } catch (e) {} props.deleteProperty(key); }
+  if (!it.date) return;
+  if (sheet === 'tasks' && it.done) return;
+  let title, desc;
+  if (sheet === 'posts') {
+    title = (PIL_EMOJI[it.pilar] || '📲') + ' ' + (it.title || 'Publicación') + ' · ' + (it.formato || '') + (it.red ? ' ' + it.red : '');
+    desc = 'Estado: ' + (it.estado || 'Idea') + (it.sub ? '\nSección: ' + it.sub : '') + (it.auto ? '\nVehículo: ' + it.auto : '') +
+      (it.gancho ? '\n\nGancho: ' + it.gancho : '') + (it.guion ? '\n\nGuion:\n' + it.guion : '');
+  } else {
+    title = ({ reunion: '👥 ', evento: '📍 ', tarea: '✅ ' }[it.tipo] || '✅ ') + (it.title || '');
+    desc = (it.lugar ? 'Lugar / con quién: ' + it.lugar + '\n' : '') + (it.notas || '');
+  }
+  const [s, e] = when_(it.date, it.time);
+  const opts = { description: desc };
+  if (sheet === 'tasks' && it.lugar) opts.location = it.lugar;
+  const ev = cal.createEvent(title, s, e, opts);
+  ev.removeAllReminders();
+  ev.addPopupReminder(30);
+  ev.addPopupReminder(sheet === 'posts' ? 24 * 60 : 60);
+  props.setProperty(key, ev.getId());
+}
+
+function calDelete_(sheet, id) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'ev_' + sheet + '_' + id;
+  const old = props.getProperty(key);
+  if (old) { try { cal_().getEventById(old).deleteEvent(); } catch (e) {} props.deleteProperty(key); }
+}
+
+/** Ejecutar a mano una vez: pide permisos y pasa todo lo cargado al calendario. */
+function syncAll() {
+  const data = readAll_();
+  data.posts.forEach(p => calSync_('posts', p));
+  data.tasks.forEach(t => calSync_('tasks', t));
+  Logger.log('Listo: ' + data.posts.length + ' publicaciones y ' + data.tasks.length + ' tareas. Calendario: ' + cal_().getName());
 }
