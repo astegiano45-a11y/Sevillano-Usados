@@ -109,7 +109,7 @@ h2{font-size:18px;font-weight:700}
 @media(max-width:700px){.cal-head{display:none}.cal{grid-template-columns:1fr}.cell{min-height:auto}.cell.out{display:none}.cell .add{opacity:1}}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
-.board{display:grid;grid-template-columns:repeat(5,minmax(220px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
+.board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
 .col{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:8px;min-height:200px}
 .col.over{border-color:var(--accent);background:var(--accent-soft)}
 .col h3{font-size:13px;display:flex;justify-content:space-between;align-items:center}
@@ -186,9 +186,9 @@ const PIL={
   exp:{name:"Contenido de experiencia",short:"Experiencia",day:3,subs:["Eventos","Uso de las camionetas","Equipo de taller o vendedores","Entrega o atención al cliente"]},
   prod:{name:"Contenido de producto",short:"Producto",day:5,subs:["Modelos","Funciones o accesorios","Comparativas","Financiación"]}
 };
-const ESTADOS=["Idea","Guion","Grabado","Editado","Publicado"];
+const ESTADOS=["Idea","Guion","Grabado","Editado","Publicado","Multimedios"];
 const FORMATOS=["Reel","Carrusel","Feed","Historia","WhatsApp"];
-const REDES=["Instagram","TikTok","Facebook","WhatsApp"];
+const REDES=["Instagram","TikTok","Facebook","WhatsApp","Radio","Diario","TV","Portal web"];
 const DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
@@ -334,9 +334,9 @@ function vHoy(){
   const pend=S.tasks.filter(x=>!x.done).sort((a,b)=>(a.date||"9")+(a.time||"")>(b.date||"9")+(b.time||"")?1:-1);
   const hoyT=pend.filter(x=>x.date&&x.date<=t);
   const prox=pend.filter(x=>!x.date||x.date>t).slice(0,8);
-  const atras=S.posts.filter(p=>p.date<t&&p.estado!=="Publicado");
-  const mes=new Date().getMonth();const pubMes=S.posts.filter(p=>p.estado==="Publicado"&&parse(p.date).getMonth()===mes).length;
-  const enProd=S.posts.filter(p=>p.estado!=="Publicado"&&p.estado!=="Idea").length;
+  const atras=S.posts.filter(p=>p.date<t&&!["Publicado","Multimedios"].includes(p.estado));
+  const mes=new Date().getMonth();const pubMes=S.posts.filter(p=>(p.estado==="Publicado"||p.estado==="Multimedios")&&parse(p.date).getMonth()===mes).length;
+  const enProd=S.posts.filter(p=>!["Publicado","Multimedios","Idea"].includes(p.estado)).length;
   return `
   <div class="row"><div><div class="eyebrow">${DIAS[new Date().getDay()]} ${new Date().getDate()} de ${MESES[new Date().getMonth()]}</div><h1>Esta semana en redes</h1></div><span class="sp"></span>
   <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn pri" data-act="newpost">+ Publicación</button></div>
@@ -370,7 +370,7 @@ function vCal(){
     const ps=calFilter==="tasks"?[]:S.posts.filter(p=>p.date===s&&(calFilter==="all"||p.pilar===calFilter));
     const ts=calFilter==="all"||calFilter==="tasks"?S.tasks.filter(x=>x.date===s):[];
     cells+=`<div class="cell ${out?"out":""} ${s===t?"today":""}"><div class="num"><b>${DIAS[d.getDay()]} ${d.getDate()}</b>${pk?`<span class="tag" style="color:var(--${pk})">${PIL[pk].short}</span>`:""}<button class="add" data-newpost="${s}" aria-label="Agregar en ${s}">+</button></div>
-      ${ps.map(p=>`<div class="ev ${p.pilar||"task"} ${p.estado==="Publicado"?"pubd":""}" data-post="${p.id}" title="${esc(p.title)}">${esc(p.title)}</div>`).join("")}
+      ${ps.map(p=>`<div class="ev ${p.pilar||"task"} ${p.estado==="Publicado"||p.estado==="Multimedios"?"pubd":""}" data-post="${p.id}" title="${esc(p.title)}">${esc(p.title)}</div>`).join("")}
       ${ts.map(x=>`<div class="ev task ${x.done?"pubd":""}" data-task="${x.id}">${x.time?x.time+" ":""}${esc(x.title)}</div>`).join("")}</div>`;}
   const f=(k,l)=>`<button aria-pressed="${calFilter===k}" data-calf="${k}">${l}</button>`;
   return `<div class="row"><h1 style="text-transform:capitalize">${MESES[mo]} ${y}</h1><span class="sp"></span>
@@ -386,7 +386,7 @@ function vProd(){
       ${ps.map(p=>{const k=ESTADOS.indexOf(e);return `<div class="kcard ${p.pilar||""}" draggable="true" data-drag="${p.id}" data-post="${p.id}">
         <div class="meta">${fmtDay(p.date)} · ${esc(p.formato||"")}</div><div style="font-weight:700">${esc(p.title)}</div>
         <div class="row">${pillOf(p.pilar)}${p.auto?`<span class="chip">${esc(p.auto)}</span>`:""}</div>
-        <div class="mv">${k>0?`<button data-move="${p.id}" data-to="${ESTADOS[k-1]}" aria-label="Mover atrás">←</button>`:""}${k<4?`<button data-move="${p.id}" data-to="${ESTADOS[k+1]}" aria-label="Mover adelante">→</button>`:""}</div></div>`}).join("")||`<div class="empty">Arrastrá tarjetas acá</div>`}
+        <div class="mv">${k>0?`<button data-move="${p.id}" data-to="${ESTADOS[k-1]}" aria-label="Mover atrás">←</button>`:""}${k<ESTADOS.length-1?`<button data-move="${p.id}" data-to="${ESTADOS[k+1]}" aria-label="Mover adelante">→</button>`:""}</div></div>`}).join("")||`<div class="empty">Arrastrá tarjetas acá</div>`}
     </div>`}).join("");
   return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn pri" data-act="newpost">+ Publicación</button></div>
   <p class="sub" style="margin:6px 0 0">Arrastrá cada publicación a la columna de su estado, o usá las flechas.</p><div class="board">${cols}</div>`;
@@ -434,7 +434,7 @@ function openPost(id,date,from){
     <label>Pilar<select id="f_pilar"><option value="">—</option>${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${p.pilar===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
     <label>Idea / sección<select id="f_sub">${subsOpts(p.pilar,p.sub)}</select></label>
     <label>Formato<select id="f_formato">${opt(FORMATOS,p.formato)}</select></label>
-    <label>Red social<select id="f_red">${opt(REDES,p.red)}</select></label>
+    <label>Red / medio<select id="f_red">${opt(REDES,p.red)}</select></label>
     <label>Estado<select id="f_estado">${opt(ESTADOS,p.estado)}</select></label>
     <label>Responsable<input id="f_resp" value="${esc(p.responsable)}"></label>
     <label class="full">Vehículo (si aplica)<input id="f_auto" value="${esc(p.auto)}" placeholder="Ej.: Toyota Hilux 2021"></label>
