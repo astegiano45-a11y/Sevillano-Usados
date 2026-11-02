@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" translate="no">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Sevillano Content OS</title>
+<title>Marketing Ford Sevillano</title>
+<meta name="google" content="notranslate">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -37,7 +38,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 .top{display:flex;align-items:center;gap:12px;padding-block:14px;flex-wrap:wrap}
-.brand{font-family:var(--f-display);font-weight:900;letter-spacing:.02em;font-size:18px;color:var(--navy);text-transform:uppercase}
+.brand{display:flex;align-items:center;gap:12px;font-family:var(--f-display);font-weight:900;letter-spacing:.02em;font-size:18px;color:var(--navy);text-transform:uppercase}
+.logo{height:44px;width:auto;background:#fff;border-radius:8px;padding:3px 6px}
+@media(max-width:520px){.logo{height:34px}.brand{font-size:15px}}
 .brand small{display:block;font-family:var(--f-mono);font-weight:500;font-size:10px;letter-spacing:.18em;color:var(--accent)}
 .sync{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
@@ -162,7 +165,7 @@ body{margin:0}
 <header>
   <div class="wrap">
     <div class="top">
-      <div class="brand">Sevillano Usados<small>Content OS</small></div>
+      <div class="brand"><img src="logo.png" alt="Ford Sevillano · Sevillano Usados Exclusivos" class="logo"><span>Marketing Ford Sevillano<small>Content OS</small></span></div>
       <button class="sync btn ghost" id="syncBtn" type="button"><span class="dot" id="dot"></span><span id="syncTxt">Cargando…</span></button>
     </div>
     <nav role="tablist" id="tabs">
