@@ -156,6 +156,19 @@ h2{font-size:18px;font-weight:700}
 .ev.span.s-first.s-last{border-radius:6px;margin-inline:0;padding-inline:6px}
 .k-recordatorio{color:var(--exp)}
 @media(max-width:700px){.ev.span{margin-inline:0;border-radius:6px;padding-inline:6px}}
+.goal{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.gnum{font-family:var(--f-display);font-size:16px;font-variant-numeric:tabular-nums}
+.gbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.gbar span{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.goal-ok .gbar span{background:var(--ok)}.goal-bad .gbar span{background:var(--warn)}
+.goal-bad{border-color:var(--warn)}.goal-bad .gmsg{color:var(--warn);font-weight:600}
+.gmsg{font-size:13px;color:var(--muted)}
+.mtable{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+.mtable th{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 4px;font-weight:500}
+.mtable td{padding:6px 4px;border-top:1px solid var(--line)}
+.mtable td.c,.mtable th.c{text-align:center}
+.mtable input[type=checkbox]{width:18px;height:18px}
+.mtable input[type=email]{padding:6px 8px}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -247,7 +260,7 @@ const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","
 const S={posts:[],tasks:[],ideas:[],brand:null};
 let calMode=(()=>{try{return localStorage.getItem("cos_calmode")||"semana"}catch(e){return "semana"}})();
 let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
-const DEF_BRAND={tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
+const DEF_BRAND={goal:3,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
   metas:["3 publicaciones por semana (L/M/V)","Cada auto del stock publicado al menos una vez por mes","Responder consultas de WhatsApp en menos de 1 hora"],
   subs:{valor:PIL.valor.subs,exp:PIL.exp.subs,prod:PIL.prod.subs},
   desc:{valor:"Educa y genera confianza: lo que hay que saber antes de comprar un usado en Tierra del Fuego.",exp:"Muestra personas reales: clientes, equipo y lo que pasa en la agencia.",prod:"Vende: los autos, lo que traen y cómo se pagan."}};
@@ -393,6 +406,13 @@ function vHoy(){
   return `
   <div class="row"><div><div class="eyebrow">${DIAS[new Date().getDay()]} ${new Date().getDate()} de ${MESES[new Date().getMonth()]}</div><h1>Esta semana en redes</h1></div><span class="sp"></span>
   <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn pri" data-act="newpost">+ Publicación</button></div>
+  ${(()=>{const g=Number(brand().goal)||3;const wk=weekDates();const mon=wk[0];const sun=ymd(new Date(parse(mon).getTime()+6*864e5));
+    const ws=S.posts.filter(p=>p.date>=mon&&p.date<=sun);const done=ws.filter(p=>["Publicado","Multimedios"].includes(p.estado)).length;
+    const dueBy=ws.filter(p=>p.date<=t).length;const late=ws.filter(p=>p.date<t&&!["Publicado","Multimedios"].includes(p.estado)).length;
+    const st=done>=g?"ok":late?"bad":"mid";const pct=Math.min(100,Math.round(done/g*100));
+    return `<div class="goal goal-${st}"><div class="row"><span class="eyebrow">Objetivo semanal</span><span class="sp"></span><b class="gnum">${done} de ${g} publicadas</b></div>
+    <div class="gbar"><span style="width:${pct}%"></span></div>
+    <div class="gmsg">${done>=g?"¡Objetivo cumplido esta semana!":late?`Van ${late} atrasada${late>1?"s":""}. Planificadas esta semana: ${ws.length}.`:ws.length<g?`Faltan planificar ${g-ws.length} publicación${g-ws.length>1?"es":""} esta semana.`:"Vamos bien. Seguí moviendo las tarjetas a Publicado."}</div></div>`})()}
   <div class="stats">
     <div class="card stat"><div class="eyebrow">Publicadas este mes</div><div class="n">${pubMes}</div></div>
     <div class="card stat"><div class="eyebrow">En producción</div><div class="n">${enProd}</div></div>
@@ -492,6 +512,17 @@ function vMarca(){
   <div class="today-grid">
     <div class="card"><h2>Tono de marca</h2><div class="ed" contenteditable="true" data-btono style="margin-top:8px">${esc(b.tono)}</div></div>
     <div class="card"><h2>Metas del trimestre</h2><ul class="subs">${b.metas.map((m,i)=>`<li><span class="ed" contenteditable="true" data-bmeta="${i}">${esc(m)}</span></li>`).join("")}</ul><button class="btn ghost" data-addmeta style="margin-top:6px">+ Meta</button></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h2>Objetivo y avisos por mail</h2>
+    <p class="sub" style="margin:6px 0 0">Los mails los manda la planilla sola. Diario: lunes a viernes 8:30. Semanal: viernes 17:00. Mensual: el día 1 a las 9:00.</p>
+    <label style="max-width:260px;margin-top:12px">Publicaciones por semana (objetivo)<input type="number" min="1" max="30" id="m_goal" value="${esc(b.goal||3)}"></label>
+    <div style="overflow-x:auto"><table class="mtable"><thead><tr><th>Mail</th><th class="c">Diario</th><th class="c">Semanal</th><th class="c">Mensual</th><th></th></tr></thead><tbody>
+    ${(b.mails||[]).map((m,i)=>`<tr><td><input type="email" id="m_mail_${i}" data-mi="${i}" data-mf="email" value="${esc(m.email)}" placeholder="nombre@gmail.com"></td>
+      ${["diario","semanal","mensual"].map(k=>`<td class="c"><input type="checkbox" id="m_${k}_${i}" data-mi="${i}" data-mf="${k}" ${m[k]?"checked":""} aria-label="${k}"></td>`).join("")}
+      <td><button class="btn ghost danger" data-mdel="${i}" aria-label="Quitar">✕</button></td></tr>`).join("")||`<tr><td colspan="5" class="sub">Todavía no hay mails. Agregá el primero.</td></tr>`}
+    </tbody></table></div>
+    <button class="btn" data-madd style="margin-top:10px">+ Agregar mail</button>
   </div>`;
 }
 
@@ -593,7 +624,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-newpost],[data-act],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-newpost],[data-act],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -610,9 +641,14 @@ function bind(){
     if(d.areaf){areaFilter=d.areaf;render();return}
     if(d.ideaf){ideaFilter=d.ideaf;render();return}
     if(d.addsub!==undefined){const b=structuredClone(brand());b.subs[d.addsub]=[...b.subs[d.addsub],"Nuevo subtema"];saveBrand(b);return}
+    if(d.madd!==undefined){const b=structuredClone(brand());b.mails=[...(b.mails||[]),{email:"",diario:true,semanal:true,mensual:false}];saveBrand(b);return}
+    if(d.mdel!==undefined){const b=structuredClone(brand());b.mails.splice(Number(d.mdel),1);saveBrand(b);return}
     if(d.addmeta!==undefined){const b=structuredClone(brand());b.metas=[...b.metas,"Nueva meta"];saveBrand(b);return}
   };
   m.onkeydown=e=>{if(e.key==="Enter"&&e.target.matches(".slot")){e.target.click()}};
+  m.querySelectorAll("[data-mf]").forEach(el=>el.onchange=()=>{const b=structuredClone(brand());const i=Number(el.dataset.mi);const f=el.dataset.mf;
+    if(f==="email"){const v=el.value.trim();if(v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){toast("Revisá el mail: "+v);return}b.mails[i].email=v}else b.mails[i][f]=el.checked;saveBrand(b)});
+  const mg=m.querySelector("#m_goal");if(mg)mg.onchange=()=>{const b=structuredClone(brand());b.goal=Math.max(1,Number(mg.value)||3);saveBrand(b)};
   m.querySelectorAll("[contenteditable]").forEach(el=>{
     el.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();el.blur()}};
     el.onblur=()=>{const b=structuredClone(brand());const v=el.textContent.trim();const d=el.dataset;

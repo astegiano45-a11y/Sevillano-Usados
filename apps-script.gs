@@ -200,3 +200,115 @@ function syncAll() {
   data.tasks.forEach(t => calSync_('tasks', t));
   Logger.log('Listo: ' + data.posts.length + ' publicaciones y ' + data.tasks.length + ' tareas. Calendario: ' + cal_().getName());
 }
+
+
+/* ================= RESÚMENES POR MAIL =================
+ * Primera vez: elegí la función setupAvisos y tocá Ejecutar (pide permiso para enviar mails).
+ * Para probar sin esperar: ejecutá testDiario, testSemanal o testMensual (te llegan solo a vos).
+ */
+const APP_URL = 'https://astegiano45-a11y.github.io/Sevillano-Usados/';
+const PIL_NAME = { valor: 'Valor', exp: 'Experiencia', prod: 'Producto' };
+const AREA_NAME = { tradicional: '0km Tradicional', ovalo: 'Plan Óvalo', usados: 'Usados', posventa: 'Posventa' };
+const DONE = ['Publicado', 'Multimedios'];
+
+function setupAvisos() {
+  ScriptApp.getProjectTriggers().filter(t => /^mail(Diario|Semanal|Mensual)$/.test(t.getHandlerFunction())).forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('mailDiario').timeBased().everyDays(1).atHour(8).nearMinute(30).inTimezone(TZ).create();
+  ScriptApp.newTrigger('mailSemanal').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(17).inTimezone(TZ).create();
+  ScriptApp.newTrigger('mailMensual').timeBased().onMonthDay(1).atHour(9).inTimezone(TZ).create();
+  Logger.log('Avisos programados: diario 8:30 (lun-vie), semanal viernes 17:00, mensual día 1 9:00.');
+}
+
+function cfg_() {
+  const d = readAll_();
+  const b = (d.config || []).find(x => x.id === 'brand') || {};
+  return { data: d, goal: Number(b.goal) || 3, mails: (b.mails || []).filter(m => m.email) };
+}
+const fmt_ = d => Utilities.formatDate(d, TZ, 'yyyy-MM-dd');
+const nice_ = s => { const d = ymd_(s); return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); };
+function monday_(d) { const x = new Date(d); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+function add_(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+function occurs_(t, s) {
+  if (!t.date) return false;
+  const len = t.dateEnd && t.dateEnd > t.date ? Math.round((ymd_(t.dateEnd) - ymd_(t.date)) / 864e5) : 0;
+  const diff = Math.round((ymd_(s) - ymd_(t.date)) / 864e5);
+  if (diff < 0) return false;
+  if (!t.repeat) return diff <= len;
+  if (t.repeatUntil && s > t.repeatUntil) return false;
+  if (t.repeat === 'mensual') { const a = ymd_(t.date), b = ymd_(s); return b.getDate() >= a.getDate() && b.getDate() - a.getDate() <= len; }
+  return diff % (t.repeat === 'quincenal' ? 14 : 7) <= len;
+}
+
+function postLine_(p) {
+  return '<li><b>' + esc_(p.title) + '</b> <span style="color:#5D6880">· ' + nice_(p.date) + ' · ' + (PIL_NAME[p.pilar] || 'Sin pilar') +
+    (p.area ? ' · ' + AREA_NAME[p.area] : '') + ' · ' + esc_(p.formato || '') + ' · <i>' + esc_(p.estado || 'Idea') + '</i></span></li>';
+}
+function esc_(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
+function wrap_(title, body) {
+  return '<div style="font-family:Arial,sans-serif;max-width:600px;color:#0D1424">' +
+    '<div style="border-bottom:3px solid #0A57FF;padding-bottom:8px;margin-bottom:14px"><b style="font-size:18px">Marketing Ford Sevillano</b><br><span style="color:#5D6880">' + title + '</span></div>' +
+    body + '<p style="margin-top:22px"><a href="' + APP_URL + '" style="background:#0A57FF;color:#fff;padding:10px 16px;border-radius:20px;text-decoration:none">Abrir el Content OS</a></p></div>';
+}
+function bar_(done, goal) {
+  const pct = Math.min(100, Math.round(done / goal * 100)); const col = done >= goal ? '#0E9F6E' : '#0A57FF';
+  return '<div style="background:#E2E7F0;border-radius:10px;height:12px;margin:6px 0"><div style="width:' + pct + '%;background:' + col + ';height:12px;border-radius:10px"></div></div>';
+}
+function send_(kind, subject, html, onlyMe) {
+  const c = cfg_();
+  const to = onlyMe ? [Session.getActiveUser().getEmail()] : c.mails.filter(m => m[kind]).map(m => m.email);
+  if (!to.length) return;
+  MailApp.sendEmail({ to: to.join(','), subject: subject, htmlBody: html, name: 'Marketing Ford Sevillano' });
+}
+
+function buildDiario_() {
+  const { data, goal } = cfg_(); const today = new Date(); const t = fmt_(today); const ayer = fmt_(add_(today, -1));
+  const mon = fmt_(monday_(today)), sun = fmt_(add_(monday_(today), 6));
+  const hoyP = data.posts.filter(p => p.date === t);
+  const atras = data.posts.filter(p => p.date < t && p.date >= fmt_(add_(today, -14)) && DONE.indexOf(p.estado) < 0);
+  const hoyT = data.tasks.filter(x => occurs_(x, t) && !(x.done && !x.repeat)).sort((a, b) => (a.time || '') > (b.time || '') ? 1 : -1);
+  const week = data.posts.filter(p => p.date >= mon && p.date <= sun); const done = week.filter(p => DONE.indexOf(p.estado) >= 0).length;
+  let h = '';
+  h += '<h3>📲 Hoy se publica</h3>' + (hoyP.length ? '<ul>' + hoyP.map(postLine_).join('') + '</ul>' : '<p style="color:#5D6880">No hay publicación planificada para hoy.</p>');
+  if (atras.length) h += '<h3 style="color:#C2410C">⚠️ Atrasadas (no se marcaron como publicadas)</h3><ul>' + atras.map(postLine_).join('') + '</ul>';
+  h += '<h3>📅 Agenda de hoy</h3>' + (hoyT.length ? '<ul>' + hoyT.map(x => '<li>' + (x.time ? '<b>' + x.time + '</b> ' : '') + esc_(x.title) + (x.lugar ? ' <span style="color:#5D6880">· ' + esc_(x.lugar) + '</span>' : '') + '</li>').join('') + '</ul>' : '<p style="color:#5D6880">Sin reuniones ni eventos.</p>');
+  h += '<h3>🎯 Objetivo semanal: ' + done + ' de ' + goal + '</h3>' + bar_(done, goal);
+  if (today.getDay() === 4 && done + week.filter(p => p.date > t).length < goal) h += '<p style="color:#C2410C"><b>Ojo:</b> con lo planificado no llegan al objetivo de esta semana. Sumen una publicación.</p>';
+  return { subject: (atras.length ? '⚠️ ' : '') + 'Hoy en Marketing · ' + nice_(t), html: wrap_('Resumen del día · ' + nice_(t), h) };
+}
+function mailDiario() { const d = new Date().getDay(); if (d === 0 || d === 6) return; const r = buildDiario_(); send_('diario', r.subject, r.html); }
+function testDiario() { const r = buildDiario_(); send_('diario', '[Prueba] ' + r.subject, r.html, true); }
+
+function resumen_(from, to, goalTotal, label) {
+  const { data } = cfg_();
+  const ps = data.posts.filter(p => p.date >= from && p.date <= to);
+  const done = ps.filter(p => DONE.indexOf(p.estado) >= 0); const pend = ps.filter(p => DONE.indexOf(p.estado) < 0);
+  const cnt = (arr, key, names) => Object.keys(names).map(k => names[k] + ': <b>' + arr.filter(p => p[key] === k).length + '</b>').join(' · ') + ' · Sin asignar: <b>' + arr.filter(p => !names[p[key]]).length + '</b>';
+  let h = '<h3>🎯 ' + done.length + ' de ' + goalTotal + ' publicaciones (' + Math.round(done.length / goalTotal * 100) + '%)</h3>' + bar_(done.length, goalTotal);
+  h += '<p><b>Por pilar:</b> ' + cnt(done, 'pilar', PIL_NAME) + '</p><p><b>Por área:</b> ' + cnt(done, 'area', AREA_NAME) + '</p>';
+  const mm = done.filter(p => p.estado === 'Multimedios').length; if (mm) h += '<p><b>En multimedios (radio, diario, TV):</b> ' + mm + '</p>';
+  h += '<h3>✅ Publicadas</h3>' + (done.length ? '<ul>' + done.map(postLine_).join('') + '</ul>' : '<p style="color:#5D6880">Ninguna.</p>');
+  if (pend.length) h += '<h3 style="color:#C2410C">⏳ Quedaron sin publicar</h3><ul>' + pend.map(postLine_).join('') + '</ul>';
+  return h;
+}
+function buildSemanal_() {
+  const { data, goal } = cfg_(); const mon = monday_(new Date());
+  let h = resumen_(fmt_(mon), fmt_(add_(mon, 6)), goal);
+  const nMon = add_(mon, 7); const next = data.posts.filter(p => p.date >= fmt_(nMon) && p.date <= fmt_(add_(nMon, 6)));
+  h += '<h3>🗓️ La semana que viene</h3>' + (next.length ? '<ul>' + next.map(postLine_).join('') + '</ul>' : '') +
+    (next.length < goal ? '<p style="color:#C2410C">Hay ' + next.length + ' planificadas de ' + goal + '. Completen el calendario antes del lunes.</p>' : '');
+  return { subject: 'Cierre de semana · Marketing Ford Sevillano', html: wrap_('Semana del ' + nice_(fmt_(mon)) + ' al ' + nice_(fmt_(add_(mon, 6))), h) };
+}
+function mailSemanal() { const r = buildSemanal_(); send_('semanal', r.subject, r.html); }
+function testSemanal() { const r = buildSemanal_(); send_('semanal', '[Prueba] ' + r.subject, r.html, true); }
+
+function buildMensual_() {
+  const { goal } = cfg_(); const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth() - 1, 1), last = new Date(now.getFullYear(), now.getMonth(), 0);
+  const weeks = Math.round(last.getDate() / 7 * 10) / 10; const goalM = Math.round(goal * weeks);
+  const mes = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][first.getMonth()];
+  const h = '<p>Objetivo del mes: ' + goal + ' por semana × ' + weeks + ' semanas ≈ <b>' + goalM + '</b> publicaciones.</p>' + resumen_(fmt_(first), fmt_(last), goalM);
+  return { subject: 'Resumen de ' + mes + ' · Marketing Ford Sevillano', html: wrap_('Resumen mensual · ' + mes + ' ' + first.getFullYear(), h) };
+}
+function mailMensual() { const r = buildMensual_(); send_('mensual', r.subject, r.html); }
+function testMensual() { const r = buildMensual_(); send_('mensual', '[Prueba] ' + r.subject, r.html, true); }
