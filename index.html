@@ -172,6 +172,11 @@ h2{font-size:18px;font-weight:700}
 .mtable td.c,.mtable th.c{text-align:center}
 .mtable input[type=checkbox]{width:18px;height:18px}
 .mtable input[type=email]{padding:6px 8px}
+.guide{list-style:none;padding:0;margin:16px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;counter-reset:g}
+.guide li{counter-increment:g;display:flex;flex-direction:column;gap:6px;position:relative;padding-top:40px}
+.guide li::before{content:counter(g);position:absolute;top:12px;left:16px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font:700 12px var(--f-mono);display:grid;place-items:center}
+.guide li p{margin:0;line-height:1.55;flex:1}
+.guide li .btn{align-self:flex-start}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -236,6 +241,7 @@ body{margin:0}
       <button role="tab" data-v="prod">Producción</button>
       <button role="tab" data-v="ideas">Banco de ideas</button>
       <button role="tab" data-v="marca">Marca</button>
+      <button role="tab" data-v="guia">Guía</button>
     </nav>
   </div>
 </header>
@@ -389,7 +395,7 @@ function weekDates(){const n=new Date();const g=n.getDay();const mon=new Date(n)
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===view));
   const m=document.getElementById("main");
-  m.innerHTML=({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,marca:vMarca})[view]();
+  m.innerHTML=({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,marca:vMarca,guia:vGuia})[view]();
   bind();
 }
 function vHoy(){
@@ -511,6 +517,40 @@ function vIdeas(){
   <div class="filters">${f("all","Todas")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}</div>
   <div class="ideas">${list.length?list.map(i=>`<div class="card idea" data-idea="${i.id}"><div class="row">${pillOf(i.pilar)}${i.sub?`<span class="chip">${esc(i.sub)}</span>`:""}<span class="sp"></span><span class="prio ${(i.prioridad||"").toLowerCase()}">${esc(i.prioridad||"")}</span></div>
     <div class="hook">${esc(i.gancho||i.title)}</div><div class="sub">${esc(i.title)}</div>${i.guion?`<span class="chip" style="align-self:flex-start">Con guion</span>`:""}</div>`).join(""):`<div class="empty" style="grid-column:1/-1">Guardá acá cada idea que se te ocurra. Después la pasás al calendario con un toque.</div>`}</div>`;
+}
+function vGuia(){
+  const go=(v,l)=>`<button class="btn" data-go="${v}">${l} →</button>`;
+  const steps=[
+   ["Qué es esto","El lugar donde el equipo de marketing planifica, produce y registra todo el contenido de Ford Sevillano. Lo que cargás acá lo ven todos, se guarda en la planilla de Google y llega al calendario del celular.",""],
+   ["La semana tiene 3 publicaciones","<b>Lunes: Valor</b> (consejos, preguntas frecuentes, mitos y verdades) · <b>Miércoles: Experiencia</b> (eventos, equipo, entregas) · <b>Viernes: Producto</b> (modelos, funciones, comparativas, financiación). El objetivo: 3 por semana, al menos 2 reels o carruseles y 1 historia.",""],
+   ["Lunes a la mañana: armar la semana","En <b>Inicio</b>, cada día tiene dos botones: <b>Del banco</b> (elegís una idea guardada de ese pilar) o <b>+ Nueva</b> (creás una propia). Completá título, área (0km, Plan Óvalo, Usados, Posventa), formato, gancho y guion.",go("hoy","Ir a Inicio")],
+   ["Durante la semana: mover las tarjetas","En <b>Producción</b> cada publicación avanza por columnas: Idea → Guion → Grabado → Editado → Publicado (o Multimedios si fue a radio o diario). Movela con la flecha → o arrastrándola. Lo que está en <b>Idea</b> es solo una propuesta: no cuenta como atrasado.",go("prod","Ir a Producción")],
+   ["Cuando publicás algo: registrarlo","Tocá <b>✓ Registrar lo publicado</b>, pegá el link de Instagram y elegí si era algo planificado o nuevo. Reconoce solo si es reel, carrusel o historia. Las <b>placas</b> también se registran acá (formato Placa). En Android, desde Instagram: <b>Compartir → Marketing FS</b>. Si no se registra, no suma al objetivo.",go("hoy","Registrar")],
+   ["Ideas que aparecen: al banco","Cualquier idea, en cualquier momento: <b>Banco de ideas → + Idea</b>, aunque sea solo el título. Después se pasa al calendario con un toque.",go("ideas","Ir al Banco")],
+   ["Reuniones, eventos y recordatorios","<b>+ Tarea / reunión</b>. Podés ponerle varios días (ferias), que se repita (cada semana o mes) y aviso al celular. Aparecen en el Calendario y en el Inicio.",go("cal","Ir al Calendario")],
+   ["Los avisos","<b>Google Calendar</b> (calendario “Marketing Ford Sevillano”): te suena antes de cada publicación y reunión. <b>Mails</b>: el viernes a las 17 llega el resumen de la semana (qué se cumplió y qué falta) y el día 1 el del mes. Los mails se configuran en <b>Marca</b>.",go("marca","Ir a Marca")],
+   ["En el celular","Abrí la página y en el menú del navegador elegí <b>Agregar a pantalla de inicio</b> (iPhone: Safari → Compartir). La primera vez tocá arriba a la derecha y pegá la URL de sincronización que te pasa Franco.",""],
+   ["Arriba a la derecha tiene que decir “Sincronizado”","Con el punto verde, lo que hacés lo ve todo el equipo. Si dice “Sin conexión”, revisá internet o volvé a pegar la URL de sincronización.",""]
+  ];
+  return `<div class="row"><h1>Cómo usar el Content OS</h1><span class="sp"></span><button class="btn" data-act="welcome">Ver introducción</button></div>
+  <p class="sub" style="margin:6px 0 0">Diez pasos para arrancar. Volvé acá cuando quieras: pestaña <b>Guía</b>.</p>
+  <ol class="guide">${steps.map(([t,d,b])=>`<li class="card"><h2>${t}</h2><p>${d}</p>${b}</li>`).join("")}</ol>
+  <div class="card" style="margin-top:14px"><h2>La rutina en una línea</h2><p style="margin:6px 0 0"><b>Lunes</b> armo la semana · <b>martes y jueves</b> grabo y edito · <b>lunes, miércoles y viernes</b> publico y registro · <b>viernes</b> leo el resumen.</p></div>`;
+}
+function openWelcome(){
+  const slides=[
+    ["Bienvenida al Content OS","Acá planificamos, producimos y registramos el contenido de Ford Sevillano. Todo lo que cargás lo ve el equipo y llega a tu calendario."],
+    ["1 · Armá la semana","Cada lunes, en Inicio: <b>Del banco</b> o <b>+ Nueva</b> para lunes (valor), miércoles (experiencia) y viernes (producto)."],
+    ["2 · Avanzá las tarjetas","En Producción movés cada publicación: Guion → Grabado → Editado → Publicado."],
+    ["3 · Registrá lo que subís","<b>✓ Registrar lo publicado</b> con el link de Instagram. Así suma al objetivo semanal y aparece en el resumen del viernes."],
+    ["Listo","Cualquier duda, la pestaña <b>Guía</b> tiene todo paso a paso."]
+  ];let i=0;
+  const draw=()=>{frm.innerHTML=`<div class="mh"><span class="eyebrow">${i+1} de ${slides.length}</span></div><div class="mb"><div class="full"><h2 style="font-size:22px">${slides[i][0]}</h2><p style="font-size:15px;line-height:1.6">${slides[i][1]}</p>
+    <div class="row" style="gap:6px">${slides.map((_,k)=>`<span style="width:${k===i?22:8}px;height:8px;border-radius:9px;background:${k===i?"var(--accent)":"var(--line)"}"></span>`).join("")}</div></div></div>
+    <div class="mf"><button type="button" class="btn ghost" data-close>Saltar</button><span class="sp"></span>${i?`<button type="button" class="btn" data-prev>Atrás</button>`:""}<button class="btn pri">${i<slides.length-1?"Siguiente":"Empezar"}</button></div>`;
+    frm.querySelector("[data-close]").onclick=()=>dlg.close();const pv=frm.querySelector("[data-prev]");if(pv)pv.onclick=()=>{i--;draw()}};
+  frm.onsubmit=e=>{e.preventDefault();if(i<slides.length-1){i++;draw()}else dlg.close()};
+  draw();dlg.showModal();try{localStorage.setItem("cos_welcome","1")}catch(e){}
 }
 function vMarca(){
   const b=brand();
@@ -698,7 +738,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -708,6 +748,8 @@ function bind(){
     if(d.pick)return pickIdea(d.pick,d.pk);
     if(d.newpost)return openPost(null,d.newpost);
     if(d.act==="reg")return openReg("");
+    if(d.act==="welcome")return openWelcome();
+    if(d.go){view=d.go;render();scrollTo(0,0);return}
     if(d.act==="cleanup")return cleanup();
     if(d.act==="newpost")return openPost(null,null);
     if(d.act==="newtask")return openTask(null);
@@ -745,6 +787,7 @@ function bind(){
 document.getElementById("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;view=b.dataset.v;render();try{localStorage.setItem("cos_view",view)}catch(_){}};
 try{const v=localStorage.getItem("cos_view");if(v)view=v}catch(_){}
 document.getElementById("syncBtn").onclick=openSync;
+setTimeout(()=>{try{if(!localStorage.getItem("cos_welcome")&&!location.search)openWelcome()}catch(e){}},900);
 (()=>{try{const q=new URLSearchParams(location.search);const sh=q.get("url")||q.get("text")||"";const m=sh.match(/https?:\/\/\S+/);
   if(q.has("share")||m){history.replaceState(null,"",location.pathname);setTimeout(()=>{view="hoy";render();openReg(m?m[0]:sh)},400)}}catch(e){}})();
 init();
