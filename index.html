@@ -255,7 +255,7 @@ const AREAS={tradicional:{name:"0km Tradicional",short:"0km"},ovalo:{name:"Plan 
 const areaB=a=>a&&AREAS[a]?`<span class="ab ab-${a}">${AREAS[a].short}</span>`:"";
 let areaFilter="all";
 const ESTADOS=["Idea","Guion","Grabado","Editado","Publicado","Multimedios"];
-const FORMATOS=["Reel","Carrusel","Feed","Historia","WhatsApp"];
+const FORMATOS=["Reel","Carrusel","Placa","Feed","Historia","WhatsApp"];
 const REDES=["Instagram","TikTok","Facebook","WhatsApp","Radio","Diario","TV","Portal web"];
 const DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -263,7 +263,7 @@ const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","
 const S={posts:[],tasks:[],ideas:[],brand:null};
 let calMode=(()=>{try{return localStorage.getItem("cos_calmode")||"semana"}catch(e){return "semana"}})();
 let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
-const DEF_BRAND={goal:3,goalHist:1,goalFeed:2,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
+const DEF_BRAND={goal:3,goalHist:1,goalFeed:2,goalPlaca:0,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
   metas:["3 publicaciones por semana (L/M/V)","Cada auto del stock publicado al menos una vez por mes","Responder consultas de WhatsApp en menos de 1 hora"],
   subs:{valor:PIL.valor.subs,exp:PIL.exp.subs,prod:PIL.prod.subs},
   desc:{valor:"Educa y genera confianza: lo que hay que saber antes de comprar un usado en Tierra del Fuego.",exp:"Muestra personas reales: clientes, equipo y lo que pasa en la agencia.",prod:"Vende: los autos, lo que traen y cómo se pagan."}};
@@ -421,7 +421,8 @@ function vHoy(){
     <div class="gchecks">${(()=>{const D=ws.filter(p=>["Publicado","Multimedios"].includes(p.estado));const b=brand();
       const h=D.filter(p=>p.formato==="Historia").length,f=D.filter(p=>p.formato==="Reel"||p.formato==="Carrusel").length;
       const c=(ok,txt)=>`<span class="gc ${ok?"on":""}">${ok?"✓":"○"} ${txt}</span>`;
-      return c(h>=(b.goalHist||1),`Historias ${h}/${b.goalHist||1}`)+c(f>=(b.goalFeed||2),`Reel o carrusel ${f}/${b.goalFeed||2}`)+Object.entries(PIL).map(([k,v])=>c(D.some(p=>p.pilar===k),v.short)).join("")})()}</div>
+      const pl=D.filter(p=>p.formato==="Placa").length;const gp=Number(b.goalPlaca)||0;
+      return c(h>=(b.goalHist||1),`Historias ${h}/${b.goalHist||1}`)+c(f>=(b.goalFeed||2),`Reel o carrusel ${f}/${b.goalFeed||2}`)+Object.entries(PIL).map(([k,v])=>c(D.some(p=>p.pilar===k),v.short)).join("")+(gp?c(pl>=gp,`Placas ${pl}/${gp}`):`<span class="gc ${pl?"on":""}">Placas: ${pl}</span>`)})()}</div>
     <div class="gmsg">${done>=g?"¡Objetivo cumplido esta semana!":late?`Van ${late} atrasada${late>1?"s":""}. Planificadas esta semana: ${ws.length}.`:ws.length<g?`Faltan planificar ${g-ws.length} publicación${g-ws.length>1?"es":""} esta semana.`:"Vamos bien. Seguí moviendo las tarjetas a Publicado."}</div></div>`})()}
   <div class="stats">
     <div class="card stat"><div class="eyebrow">Publicadas este mes</div><div class="n">${pubMes}</div></div>
@@ -529,7 +530,8 @@ function vMarca(){
     <div class="row" style="margin-top:12px;align-items:flex-end">
       <label style="max-width:200px">Publicaciones por semana<input type="number" min="1" max="30" id="m_goal" data-gk="goal" value="${esc(b.goal||3)}"></label>
       <label style="max-width:200px">Mínimo de historias<input type="number" min="0" max="30" id="m_goalHist" data-gk="goalHist" value="${esc(b.goalHist??1)}"></label>
-      <label style="max-width:200px">Mínimo de reels o carruseles<input type="number" min="0" max="30" id="m_goalFeed" data-gk="goalFeed" value="${esc(b.goalFeed??2)}"></label></div>
+      <label style="max-width:200px">Mínimo de reels o carruseles<input type="number" min="0" max="30" id="m_goalFeed" data-gk="goalFeed" value="${esc(b.goalFeed??2)}"></label>
+      <label style="max-width:200px">Placas por semana (0 = solo contar)<input type="number" min="0" max="50" id="m_goalPlaca" data-gk="goalPlaca" value="${esc(b.goalPlaca??0)}"></label></div>
     <p class="sub" style="margin:6px 0 0;font-size:12px">Además se controla que haya al menos una de cada pilar: valor, experiencia y producto.</p>
     <div style="overflow-x:auto"><table class="mtable"><thead><tr><th>Mail</th><th class="c">Diario</th><th class="c">Semanal</th><th class="c">Mensual</th><th></th></tr></thead><tbody>
     ${(b.mails||[]).map((m,i)=>`<tr><td><input type="email" id="m_mail_${i}" data-mi="${i}" data-mf="email" value="${esc(m.email)}" placeholder="nombre@gmail.com"></td>

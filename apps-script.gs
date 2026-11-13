@@ -222,7 +222,7 @@ function setupAvisos() {
 function cfg_() {
   const d = readAll_();
   const b = (d.config || []).find(x => x.id === 'brand') || {};
-  return { data: d, goal: Number(b.goal) || 3, gHist: b.goalHist == null ? 1 : Number(b.goalHist), gFeed: b.goalFeed == null ? 2 : Number(b.goalFeed), mails: (b.mails || []).filter(m => m.email) };
+  return { data: d, goal: Number(b.goal) || 3, gHist: b.goalHist == null ? 1 : Number(b.goalHist), gFeed: b.goalFeed == null ? 2 : Number(b.goalFeed), gPlaca: Number(b.goalPlaca) || 0, mails: (b.mails || []).filter(m => m.email) };
 }
 const fmt_ = d => Utilities.formatDate(d, TZ, 'yyyy-MM-dd');
 const nice_ = s => { const d = ymd_(s); return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); };
@@ -244,7 +244,8 @@ function checks_(done, c) {
   const h = done.filter(p => p.formato === 'Historia').length, f = done.filter(p => p.formato === 'Reel' || p.formato === 'Carrusel').length;
   const it = (ok, t) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:3px 10px;border-radius:12px;font-size:13px;' + (ok ? 'background:#E1F5EC;color:#0E9F6E' : 'background:#FDEBDF;color:#C2410C') + '">' + (ok ? '✓ ' : '✗ ') + t + '</span>';
   return '<p>' + it(h >= c.gHist, 'Historias ' + h + '/' + c.gHist) + it(f >= c.gFeed, 'Reel o carrusel ' + f + '/' + c.gFeed) +
-    Object.keys(PIL_NAME).map(k => it(done.some(p => p.pilar === k), PIL_NAME[k])).join('') + '</p>';
+    Object.keys(PIL_NAME).map(k => it(done.some(p => p.pilar === k), PIL_NAME[k])).join('') +
+    (c.gPlaca ? it(done.filter(p => p.formato === 'Placa').length >= c.gPlaca, 'Placas ' + done.filter(p => p.formato === 'Placa').length + '/' + c.gPlaca) : ' <span style="font-size:13px">Placas: <b>' + done.filter(p => p.formato === 'Placa').length + '</b></span>') + '</p>';
 }
 function postLine_(p) {
   return '<li><b>' + esc_(p.title) + '</b> <span style="color:#5D6880">· ' + nice_(p.date) + ' · ' + (PIL_NAME[p.pilar] || 'Sin pilar') +
