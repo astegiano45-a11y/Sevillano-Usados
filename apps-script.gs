@@ -14,7 +14,8 @@ const SHEETS = {
   config: ['id', 'actualizado', 'json'],
   refs: ['id', 'titulo', 'pilar', 'actualizado', 'json'],
   recursos: ['id', 'categoria', 'titulo', 'actualizado', 'json'],
-  drive: ['id', 'nombre', 'carpeta', 'tipo', 'fecha', 'json']
+  drive: ['id', 'nombre', 'carpeta', 'tipo', 'fecha', 'json'],
+  comentarios: ['id', 'tipo', 'paso', 'texto', 'estado', 'actualizado', 'json']
 };
 
 const PILARES = { valor: 'Valor', exp: 'Experiencia', prod: 'Producto' };
@@ -30,7 +31,7 @@ function doPost(e) {
     const body = JSON.parse(e.postData.contents);
     if (body.action === 'all') return json_({ ok: true, data: readAll_() });
     if (!SHEETS[body.sheet] || body.sheet === 'drive') return json_({ ok: false, error: 'Hoja desconocida' });
-    if (body.action === 'upsert') { upsert_(body.sheet, body.item); try { calSync_(body.sheet, body.item); } catch (e) {} return json_({ ok: true }); }
+    if (body.action === 'upsert') { const isNewCm = body.sheet === 'comentarios' && findRow_(sheet_('comentarios'), body.item.id) < 0; upsert_(body.sheet, body.item); if (isNewCm) try { avisoComentario_(body.item); } catch (e) {} try { calSync_(body.sheet, body.item); } catch (e) {} return json_({ ok: true }); }
     if (body.action === 'delete') { del_(body.sheet, body.id); try { calDelete_(body.sheet, body.id); } catch (e) {} return json_({ ok: true }); }
     return json_({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
@@ -71,7 +72,7 @@ function row_(name, it) {
     id: it.id, fecha: it.date || '', hora: it.time || '', pilar: PILARES[it.pilar] || '',
     seccion: it.sub || '', titulo: it.title || it.titulo || it.nota || '', estado: it.estado || '', formato: it.formato || '',
     red: it.red || '', gancho: it.gancho || '', tipo: it.tipo || '', hecha: it.done ? 'Sí' : 'No',
-    lugar: it.lugar || '', prioridad: it.prioridad || '', categoria: it.cat || '', actualizado: now, json: JSON.stringify(it)
+    lugar: it.lugar || '', prioridad: it.prioridad || '', categoria: it.cat || '', paso: it.paso || '', texto: it.texto || '', actualizado: now, json: JSON.stringify(it)
   };
   return SHEETS[name].map(h => map[h]);
 }
@@ -359,4 +360,16 @@ function syncDrive() {
   if (out.length) sh.getRange(2, 1, out.length, SHEETS.drive.length).setValues(out);
   upsert_('config', { id: 'drivemeta', at: new Date().toISOString(), count: out.length });
   Logger.log('Biblioteca: ' + out.length + ' archivos.');
+}
+
+
+/* ================= COMENTARIOS DE LA GUÍA =================
+ * Cuando alguien deja una duda o sugerencia en la app, te llega un mail.
+ */
+function avisoComentario_(c) {
+  const to = Session.getEffectiveUser().getEmail();
+  const html = '<div style="font-family:Arial,sans-serif;max-width:560px"><p><b>' + esc_(c.quien || 'Alguien') + '</b> dejó una <b>' + esc_(c.tipo || 'duda') + '</b>' +
+    (c.paso ? ' sobre <i>' + esc_(c.paso) + '</i>' : '') + ':</p><blockquote style="border-left:3px solid #0A57FF;margin:0;padding:6px 12px;background:#F5F7FB">' + esc_(c.texto) +
+    '</blockquote><p>Respondela desde la app: pestaña <b>Guía → Dudas y sugerencias</b>.</p><p><a href="' + APP_URL + '">Abrir el Content OS</a></p></div>';
+  MailApp.sendEmail({ to: to, subject: '💬 Nueva ' + (c.tipo || 'duda').toLowerCase() + ' en el Content OS', htmlBody: html, name: 'Marketing Ford Sevillano' });
 }

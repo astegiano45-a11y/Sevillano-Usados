@@ -186,6 +186,29 @@ h2{font-size:18px;font-weight:700}
 .dname{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dmeta{font-size:11px;color:var(--muted);font-family:var(--f-mono)}
 .dcard .btn{font-size:12px;padding:6px 10px}
+.guide2{list-style:none;padding:0;margin:16px 0 0;display:flex;flex-direction:column;gap:8px}
+.guide2>li{padding:0}
+.gh{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;cursor:pointer;border-radius:var(--r)}
+.gh:focus-visible{outline:2px solid var(--accent)}
+.gn{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font:700 12px var(--f-mono);display:grid;place-items:center;flex:none}
+.gt{font-family:var(--f-display);font-weight:700;font-size:15px}
+.gar{color:var(--muted);font-size:11px}
+.gb{padding:0 16px 16px 52px;display:flex;flex-direction:column;gap:10px}
+.gb p{margin:0;line-height:1.55}
+.gsteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;line-height:1.5}
+@media(max-width:520px){.gb{padding-left:16px}}
+.clist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.cm{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;background:var(--bg)}
+.cm.done{opacity:.7}
+.cr{margin-top:6px;padding:8px;border-radius:8px;background:var(--exp-soft);color:var(--fg)}
+.help{background:var(--accent-soft);border-radius:var(--r);margin-bottom:16px}
+.hh{all:unset;box-sizing:border-box;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;width:100%;padding:10px 14px;cursor:pointer;font-size:13px}
+.hh:focus-visible{outline:2px solid var(--accent);border-radius:var(--r)}
+.hh .sub{font-size:13px}
+.hl{margin:0;padding:4px 14px 10px;display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:6px 14px;font-size:13px}
+.hl dt{font-weight:700}.hl dd{margin:0;color:var(--fg);line-height:1.45}
+@media(max-width:600px){.hl{grid-template-columns:1fr}.hl dd{margin-bottom:6px}}
+.tg{border-top:1px solid var(--line)}.tg summary{cursor:pointer;padding:10px 0;font-size:14px}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -252,7 +275,7 @@ body{margin:0}
       <button role="tab" data-v="bib">Biblioteca</button>
       <button role="tab" data-v="rec">Recursos</button>
       <button role="tab" data-v="marca">Marca</button>
-      <button role="tab" data-v="guia">Guía</button>
+      <button role="tab" data-v="guia">Guía<span id="gbadge"></span></button>
     </nav>
   </div>
 </header>
@@ -277,8 +300,8 @@ const REDES=["Instagram","TikTok","Facebook","WhatsApp","Radio","Diario","TV","P
 const DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
-const S={posts:[],tasks:[],ideas:[],refs:[],recursos:[],drive:[],driveMeta:null,brand:null};
-const COLLS=["posts","tasks","ideas","refs","recursos"];
+const S={posts:[],tasks:[],ideas:[],refs:[],recursos:[],comentarios:[],drive:[],driveMeta:null,brand:null};
+const COLLS=["posts","tasks","ideas","refs","recursos","comentarios"];
 let calMode=(()=>{try{return localStorage.getItem("cos_calmode")||"semana"}catch(e){return "semana"}})();
 let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
 const DEF_BRAND={goal:3,goalHist:1,goalFeed:2,goalPlaca:0,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
@@ -377,7 +400,7 @@ function openSync(){
   frm.onsubmit=async e=>{e.preventDefault();const u=frm.querySelector("#s_url").value.trim();
     if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){toast("La URL tiene que empezar con script.google.com y terminar en /exec");return}
     sheetUrl=u;local.set("sheet",u);dlg.close();setStatus(false,"Sincronizando…");
-    const before={posts:S.posts,tasks:S.tasks,ideas:S.ideas,refs:S.refs,recursos:S.recursos};
+    const before={posts:S.posts,tasks:S.tasks,ideas:S.ideas,refs:S.refs,recursos:S.recursos,comentarios:S.comentarios};
     try{const j=await api({action:"all"});
       if(!(j.data.posts||[]).length&&before.posts.length){for(const k of COLLS)for(const it of (before[k]||[]))await api({action:"upsert",sheet:k,item:it});if(S.brand)await api({action:"upsert",sheet:"config",item:{id:"brand",...S.brand}});toast("Subimos tus datos a la planilla")}
       await pull();
@@ -407,7 +430,8 @@ function weekDates(){const n=new Date();const g=n.getDay();const mon=new Date(n)
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===view));
   const m=document.getElementById("main");
-  m.innerHTML=({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,bib:vBib,rec:vRec,marca:vMarca,guia:vGuia})[view]();
+  const gb=document.getElementById("gbadge");if(gb){const n=S.comentarios.filter(c=>c.estado!=="Resuelto").length;gb.textContent=n?" · "+n:""}
+  m.innerHTML=helpBar()+({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,bib:vBib,rec:vRec,marca:vMarca,guia:vGuia})[view]();
   bind();
 }
 function vHoy(){
@@ -626,25 +650,122 @@ function openShared(link){
   frm.querySelector("[data-spub]").onclick=()=>{dlg.close();openReg(link)};
   dlg.showModal();
 }
+const GUIA=[
+ {t:"Qué es el Content OS",go:"",d:"El lugar donde el equipo planifica, produce y registra el contenido de Ford Sevillano. Lo que cargás lo ve todo el equipo, se guarda en la planilla de Google y llega al calendario del celular.",
+  p:["Arriba a la derecha tiene que decir <b>“Sincronizado con Google Sheets”</b> con el punto verde. Eso significa que lo que hacés lo ven los demás.","Las pestañas de arriba son las secciones: Inicio (tu semana), Calendario, Producción, Banco de ideas, Biblioteca, Recursos, Marca y esta Guía.","Si dice “Sin conexión”: revisá internet, apretá F5. Si sigue, tocá ese texto y volvé a pegar la URL de sincronización que te pasa Franco."]},
+ {t:"El objetivo de cada semana",go:"hoy",d:"Lo que pidió Romina: 3 publicaciones por semana, una de cada pilar, con al menos 2 reels o carruseles y 1 historia. Las placas también se cuentan.",
+  p:["<b>Lunes = Valor</b>: consejos, preguntas frecuentes, mitos y verdades.","<b>Miércoles = Experiencia</b>: eventos, uso de camionetas, equipo de taller o vendedores, entregas.","<b>Viernes = Producto</b>: modelos, funciones, accesorios, comparativas, financiación.","En <b>Inicio</b>, la barra “Objetivo semanal” muestra cuántas van. Los círculos se ponen verdes (✓) cuando se cumple cada parte.","Solo cuenta lo que está marcado como <b>Publicado</b> o <b>Multimedios</b>."]},
+ {t:"Lunes: armar la semana",go:"hoy",d:"Cada lunes a la mañana se decide qué sale lunes, miércoles y viernes.",
+  p:["Entrá a <b>Inicio</b>. Vas a ver tres tarjetas: Lunes, Miércoles y Viernes.","En cada una tocá <b>Del banco</b> para elegir una idea ya guardada de ese pilar, o <b>+ Nueva</b> para crear una propia.","Se abre la ficha: completá <b>título</b>, <b>área</b> (0km, Plan Óvalo, Usados, Posventa o General), <b>formato</b> (Reel, Carrusel, Historia, Placa…), <b>gancho</b> y <b>guion</b>.","En <b>Estado</b> elegí <b>Guion</b> cuando ya está aprobada para hacerse. Si la dejás en “Idea”, es solo una propuesta.","Tocá <b>Guardar</b>. Aparece en el Calendario y en tu Google Calendar con aviso."]},
+ {t:"Durante la semana: avanzar el trabajo",go:"prod",d:"En Producción cada publicación es una tarjeta que avanza por columnas.",
+  p:["Columnas: <b>Idea → Guion → Grabado → Editado → Publicado → Multimedios</b>.","Cuando grabás, mové la tarjeta a <b>Grabado</b> con la flecha <b>→</b> (o arrastrándola en la compu). Lo mismo al editar.","Si algo aprobado (Guion, Grabado o Editado) se pasa de fecha, aparece como <b>atrasado</b> en rojo.","Si una idea no va más, abrila y tocá <b>Devolver al banco</b>: vuelve al Banco de ideas sin borrarse."]},
+ {t:"Cuando publicás: registrarlo",go:"hoy",d:"La app no se entera sola de lo que subís a Instagram: hay que registrarlo. Tarda 20 segundos.",
+  p:["Tocá el botón azul <b>✓ Registrar lo publicado</b> (en Inicio o Producción).","Pegá el <b>link</b> de la publicación de Instagram (opcional pero recomendado). Reconoce solo si es reel, carrusel o historia.","En “¿Era algo planificado?” elegí cuál era. Si no estaba planificado, dejá “No, es algo nuevo” y completá título, formato, pilar y área.","Las <b>placas</b> se registran igual: formato <b>Placa</b>.","Tocá <b>✓ Registrar</b>. Suma al objetivo semanal al instante.","<b>En Android</b>, más rápido: en Instagram tocá <b>Compartir → Marketing FS → Lo publicamos nosotros</b>."]},
+ {t:"Banco de ideas",go:"ideas",d:"Toda idea que aparezca, en cualquier momento, va acá. Después se usa cuando arman la semana.",
+  p:["Tocá <b>+ Idea</b>. Alcanza con el título.","Elegí el <b>pilar</b> y, si querés, sección, gancho y prioridad (Alta aparece primero).","Para usarla: abrila y tocá <b>Pasar al calendario</b>, o elegila desde <b>Del banco</b> en Inicio."]},
+ {t:"Biblioteca: material y referencias",go:"bib",d:"Dos solapas: el material propio de Drive y las referencias de otras cuentas.",
+  p:["<b>Material de Drive</b>: aparecen solos los videos y fotos de la carpeta compartida. Se actualiza cada hora.","Filtrá por carpeta, tipo, modelo o <b>Sin usar</b> para encontrar material que todavía no salió.","Cuando usás un archivo, tocá <b>Usar en publicación</b> y elegí cuál. Así queda registrado.","<b>Referencias</b>: en vez de mandar reels al grupo, tocá <b>+ Referencia</b>, pegá el link y anotá por qué sirve.","Si una referencia se convierte en contenido, abrila y tocá <b>Convertir en idea</b>."]},
+ {t:"Recursos",go:"rec",d:"El “segundo cerebro”: lo que hoy anda disperso.",
+  p:["Tocá <b>+ Recurso</b> y elegí la categoría: contactos de medios, accesos, documentos y contratos, proveedores, marca y diseño.","Ejemplos: tarifas de radios, teléfono del diario, dónde está el acceso a Meta Business, contrato de pauta.","<b>No guardes contraseñas</b>: anotá dónde están o quién las tiene.","Usá el buscador de arriba para encontrar cualquier cosa."]},
+ {t:"Reuniones, eventos y recordatorios",go:"cal",d:"Todo lo que tiene fecha y no es una publicación.",
+  p:["Tocá <b>+ Tarea / reunión</b>.","Elegí el tipo: Tarea, Reunión, Evento o Recordatorio.","Para algo de varios días (una feria) completá <b>Desde</b> y <b>Hasta</b>.","Para algo que se repite, elegí en <b>Repetir</b>: cada semana, cada 2 semanas o cada mes.","Dejá <b>Aviso al celular: Sí</b> para que suene antes."]},
+ {t:"Avisos: calendario y mails",go:"marca",d:"Dos tipos de avisos que se complementan.",
+  p:["<b>Google Calendar</b> (calendario “Marketing Ford Sevillano”): suena el día anterior y 30 minutos antes de cada publicación, y 1 hora antes de cada reunión.","Para que te suene: en la app Google Calendar del celular, tildá “Marketing Ford Sevillano” y activá sus notificaciones.","<b>Mails</b>: el viernes a las 17 llega el resumen de la semana (qué se cumplió y qué falta) y el día 1 el del mes.","Quién recibe cada mail se configura en <b>Marca → Objetivo y avisos por mail</b>."]},
+ {t:"Usarla en el celular",go:"",d:"Se instala como una app más, con el logo de Sevillano.",
+  p:["<b>Android</b>: abrí la página en Chrome → menú ⋮ → <b>Agregar a la pantalla principal</b> / <b>Instalar app</b>.","<b>iPhone</b>: abrí la página en <b>Safari</b> → botón Compartir (cuadrado con flecha) → <b>Agregar a pantalla de inicio</b>.","La primera vez, tocá arriba a la derecha y pegá la <b>URL de sincronización</b> que te pasa Franco."]}
+];
+let gOpen=0,helpOpen=false;
+const TABHELP={
+ hoy:["Inicio","Tu tablero de la semana: qué hay que publicar, cómo van con el objetivo y qué tenés hoy.",[
+  ["Registrar lo publicado (botón azul)","Cuando suben algo a Instagram, lo registran acá para que cuente. Pegás el link y listo."],
+  ["+ Planificar","Crea una publicación para una fecha futura."],
+  ["+ Tarea / reunión","Carga reuniones, eventos, recordatorios o tareas con fecha. Te avisa en el celular."],
+  ["Objetivo semanal","La barra muestra cuántas publicaciones van de las 3 de la semana. Los círculos marcan si ya hubo historia, reels o carruseles, una de cada pilar y cuántas placas. Verde = cumplido; borde rojo = hay algo atrasado."],
+  ["Publicadas este mes","Cuántas publicaciones se marcaron como Publicado o Multimedios en el mes."],
+  ["En producción","Cuántas están en marcha (Guion, Grabado o Editado)."],
+  ["Atrasadas","Publicaciones aprobadas cuya fecha ya pasó y no se publicaron. Las que quedaron en Idea no cuentan."],
+  ["Ideas guardadas","Cuántas ideas hay en el Banco para usar."],
+  ["Publicaciones L · M · V","Las tres tarjetas de la semana. Con “Del banco” elegís una idea guardada; con “+ Nueva” creás una. Si una aparece apagada, todavía está en Idea (sin aprobar)."],
+  ["Para hoy / Próximo","Tus tareas, reuniones y eventos de hoy y de los próximos días. El cuadradito los marca como hechos."]]],
+ cal:["Calendario","Todo lo que tiene fecha: publicaciones, reuniones, eventos y recordatorios.",[
+  ["Semana / Mes","Cambia la vista. Semana muestra más detalle de cada publicación."],
+  ["‹ Hoy ›","Avanza o retrocede una semana (o un mes). “Hoy” vuelve a la fecha actual."],
+  ["Filtros de pilar","Muestra solo Valor, Experiencia, Producto o solo tareas y reuniones."],
+  ["Filtros de área","Muestra solo 0km, Plan Óvalo, Usados, Posventa o lo General."],
+  ["Colores","Azul = Valor, verde = Experiencia, naranja = Producto. Las tareas van en gris, las reuniones en azul claro y los eventos en naranja. Tachado = ya publicado o hecho. ↻ = se repite."],
+  ["+ Agregar (en cada día)","Crea una publicación directo en ese día; el pilar se pone solo según el día."]]],
+ prod:["Producción","El tablero de trabajo: en qué paso está cada publicación.",[
+  ["Columnas","Idea (propuesta) → Guion (aprobada) → Grabado → Editado → Publicado → Multimedios (radio, diario, TV)."],
+  ["Mover tarjetas","Con las flechas ← → de cada tarjeta, o arrastrándola en la compu."],
+  ["Etiquetas de la tarjeta","Fecha, formato, área (0km, Óvalo…), pilar y vehículo."],
+  ["Devolver ideas sin aprobar al banco","Saca del calendario las que quedaron en Idea con fecha pasada y las devuelve al Banco de ideas."],
+  ["Registrar lo publicado","Lo mismo que en Inicio: para marcar algo como publicado con su link."]]],
+ ideas:["Banco de ideas","La reserva de ideas. No tienen fecha hasta que deciden usarlas.",[
+  ["+ Idea","Guardá cualquier idea, aunque sea solo el título."],
+  ["Filtros","Muestra las de un solo pilar."],
+  ["Prioridad","Las de prioridad Alta aparecen primero."],
+  ["“Con guion”","La idea ya tiene el guion escrito."],
+  ["Pasar al calendario","Dentro de cada idea: la pone en el próximo día de su pilar para producirla."]]],
+ bib:["Biblioteca","Material propio (Drive) y referencias de otras cuentas.",[
+  ["Material de Drive","Videos y fotos de la carpeta compartida. Se cargan solos cada hora."],
+  ["Filtros","Por carpeta, tipo (video o imagen), modelo de auto y “Sin usar”."],
+  ["Usar en publicación","Vincula el archivo a una publicación. Así sabés qué material ya salió."],
+  ["Referencias","Reels o posts de otras cuentas que les gustan. Con etiquetas (gancho, edición, audio…) y nota de por qué sirven."],
+  ["Convertir en idea","Pasa una referencia al Banco de ideas."]]],
+ rec:["Recursos","El “segundo cerebro”: datos que hoy están dispersos.",[
+  ["+ Recurso","Guarda un contacto, tarifa, contrato, proveedor o dónde está un acceso."],
+  ["Categorías","Contactos de medios, Accesos y plataformas, Documentos y contratos, Proveedores, Marca y diseño, Otros."],
+  ["Buscador","Encuentra cualquier recurso por palabra."],
+  ["Importante","No guardar contraseñas: anotar dónde están o quién las tiene."]]],
+ marca:["Marca","La configuración: pilares, tono, metas, objetivo y avisos.",[
+  ["Pilares y subtemas","Qué entra en Valor, Experiencia y Producto. Tocá el texto para editarlo."],
+  ["Tono de marca","Cómo hablamos en las publicaciones."],
+  ["Metas del trimestre","Objetivos generales del equipo."],
+  ["Objetivo semanal","Cuántas publicaciones, historias, reels o carruseles y placas por semana."],
+  ["Carpeta de Drive","El link de la carpeta que se muestra en Biblioteca."],
+  ["Avisos por mail","Quién recibe el resumen diario, semanal y mensual."]]],
+ guia:["Guía","Cómo usar la app paso a paso, y el lugar para dejar dudas o sugerencias.",[
+  ["Pasos","Tocá cada uno para ver el detalle."],
+  ["¿No se entiende?","Dejá un comentario en ese paso: Franco recibe un mail y te responde acá."],
+  ["Dudas y sugerencias","La lista de todos los comentarios con su respuesta. Pendiente / Resuelto."]]]
+};
+function helpBar(){const h=TABHELP[view];if(!h)return "";
+  return `<div class="help ${helpOpen?"open":""}"><button class="hh" data-help aria-expanded="${helpOpen}">ℹ️ <b>¿Qué es “${h[0]}”?</b> <span class="sub">${h[1]}</span><span class="sp"></span><span class="gar">${helpOpen?"Ocultar ▲":"Ver para qué sirve cada cosa ▼"}</span></button>
+  ${helpOpen?`<dl class="hl">${h[2].map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl><div class="row" style="padding:0 14px 12px"><span class="sp"></span><button class="btn ghost" data-cm="Pestaña ${h[0]}">¿Algo no se entiende? Dejá un comentario</button></div>`:""}</div>`}
 function vGuia(){
-  const go=(v,l)=>`<button class="btn" data-go="${v}">${l} →</button>`;
-  const steps=[
-   ["Qué es esto","El lugar donde el equipo de marketing planifica, produce y registra todo el contenido de Ford Sevillano. Lo que cargás acá lo ven todos, se guarda en la planilla de Google y llega al calendario del celular.",""],
-   ["La semana tiene 3 publicaciones","<b>Lunes: Valor</b> (consejos, preguntas frecuentes, mitos y verdades) · <b>Miércoles: Experiencia</b> (eventos, equipo, entregas) · <b>Viernes: Producto</b> (modelos, funciones, comparativas, financiación). El objetivo: 3 por semana, al menos 2 reels o carruseles y 1 historia.",""],
-   ["Lunes a la mañana: armar la semana","En <b>Inicio</b>, cada día tiene dos botones: <b>Del banco</b> (elegís una idea guardada de ese pilar) o <b>+ Nueva</b> (creás una propia). Completá título, área (0km, Plan Óvalo, Usados, Posventa), formato, gancho y guion.",go("hoy","Ir a Inicio")],
-   ["Durante la semana: mover las tarjetas","En <b>Producción</b> cada publicación avanza por columnas: Idea → Guion → Grabado → Editado → Publicado (o Multimedios si fue a radio o diario). Movela con la flecha → o arrastrándola. Lo que está en <b>Idea</b> es solo una propuesta: no cuenta como atrasado.",go("prod","Ir a Producción")],
-   ["Cuando publicás algo: registrarlo","Tocá <b>✓ Registrar lo publicado</b>, pegá el link de Instagram y elegí si era algo planificado o nuevo. Reconoce solo si es reel, carrusel o historia. Las <b>placas</b> también se registran acá (formato Placa). En Android, desde Instagram: <b>Compartir → Marketing FS</b>. Si no se registra, no suma al objetivo.",go("hoy","Registrar")],
-   ["Ideas que aparecen: al banco","Cualquier idea, en cualquier momento: <b>Banco de ideas → + Idea</b>, aunque sea solo el título. Después se pasa al calendario con un toque.",go("ideas","Ir al Banco")],
-   ["Biblioteca y Recursos","<b>Biblioteca → Material de Drive</b>: los videos y fotos de la carpeta de Drive aparecen solos; con “Usar en publicación” queda registrado qué material ya salió y filtrás lo que está <b>sin usar</b>. <b>Biblioteca → Referencias</b>: los reels de otras cuentas que les gustan (en vez del grupo de Instagram). <b>Recursos</b>: contactos de medios, tarifas, dónde están los accesos, contratos.",go("bib","Ir a Biblioteca")],
-   ["Reuniones, eventos y recordatorios","<b>+ Tarea / reunión</b>. Podés ponerle varios días (ferias), que se repita (cada semana o mes) y aviso al celular. Aparecen en el Calendario y en el Inicio.",go("cal","Ir al Calendario")],
-   ["Los avisos","<b>Google Calendar</b> (calendario “Marketing Ford Sevillano”): te suena antes de cada publicación y reunión. <b>Mails</b>: el viernes a las 17 llega el resumen de la semana (qué se cumplió y qué falta) y el día 1 el del mes. Los mails se configuran en <b>Marca</b>.",go("marca","Ir a Marca")],
-   ["En el celular","Abrí la página y en el menú del navegador elegí <b>Agregar a pantalla de inicio</b> (iPhone: Safari → Compartir). La primera vez tocá arriba a la derecha y pegá la URL de sincronización que te pasa Franco.",""],
-   ["Arriba a la derecha tiene que decir “Sincronizado”","Con el punto verde, lo que hacés lo ve todo el equipo. Si dice “Sin conexión”, revisá internet o volvé a pegar la URL de sincronización.",""]
-  ];
-  return `<div class="row"><h1>Cómo usar el Content OS</h1><span class="sp"></span><button class="btn" data-act="welcome">Ver introducción</button></div>
-  <p class="sub" style="margin:6px 0 0">Once pasos para arrancar. Volvé acá cuando quieras: pestaña <b>Guía</b>.</p>
-  <ol class="guide">${steps.map(([t,d,b])=>`<li class="card"><h2>${t}</h2><p>${d}</p>${b}</li>`).join("")}</ol>
-  <div class="card" style="margin-top:14px"><h2>La rutina en una línea</h2><p style="margin:6px 0 0"><b>Lunes</b> armo la semana · <b>martes y jueves</b> grabo y edito · <b>lunes, miércoles y viernes</b> publico y registro · <b>viernes</b> leo el resumen.</p></div>`;
+  const tabsGuide=`<div class="card" style="margin-top:14px"><h2>Pestaña por pestaña</h2><p class="sub" style="margin:4px 0 10px">Qué es cada pantalla y para qué sirve cada parte. También lo ves arriba de cada pestaña en “ℹ️ ¿Qué es…?”.</p>${Object.entries(TABHELP).map(([k,h])=>`<details class="tg"><summary><b>${h[0]}</b> — ${h[1]}</summary><dl class="hl">${h[2].map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl>${k!=="guia"?`<button class="btn" data-go="${k}" style="margin:0 0 10px 14px">Ir a ${h[0]} →</button>`:""}</details>`).join("")}</div>`;
+  const pend=S.comentarios.filter(c=>c.estado!=="Resuelto");
+  return `<div class="row"><h1>Cómo usar el Content OS</h1><span class="sp"></span><button class="btn" data-act="welcome">Ver introducción</button><button class="btn pri" data-cm="">💬 Dejar una duda o sugerencia</button></div>
+  <p class="sub" style="margin:6px 0 0">Tocá cada paso para ver el detalle. Si algo no se entiende, dejá un comentario en ese paso: Franco lo lee y te responde acá.</p>
+  <ol class="guide2">${GUIA.map((g,i)=>{const cs=S.comentarios.filter(c=>c.paso===g.t);const open=gOpen===i;return `<li class="card ${open?"open":""}">
+    <button class="gh" data-gi="${i}" aria-expanded="${open}"><span class="gn">${i+1}</span><span class="gt">${g.t}</span>${cs.length?`<span class="chip">💬 ${cs.length}</span>`:""}<span class="sp"></span><span class="gar">${open?"▲":"▼"}</span></button>
+    ${open?`<div class="gb"><p>${g.d}</p><ol class="gsteps">${g.p.map(x=>`<li>${x}</li>`).join("")}</ol>
+      <div class="row">${g.go?`<button class="btn" data-go="${g.go}">Ir ahí →</button>`:""}<span class="sp"></span><button class="btn ghost" data-cm="${esc(g.t)}">¿No se entiende? Dejá un comentario</button></div>
+      ${cs.length?`<div class="clist">${cs.map(cmHtml).join("")}</div>`:""}</div>`:""}</li>`}).join("")}</ol>
+  ${tabsGuide}
+  <div class="card" style="margin-top:14px"><h2>La rutina en una línea</h2><p style="margin:6px 0 0"><b>Lunes</b> armo la semana · <b>martes y jueves</b> grabo y edito · <b>lunes, miércoles y viernes</b> publico y registro · <b>viernes</b> leo el resumen.</p></div>
+  <div class="card" style="margin-top:14px"><div class="row"><h2>Dudas y sugerencias</h2>${pend.length?`<span class="chip" style="color:var(--warn)">${pend.length} pendiente${pend.length>1?"s":""}</span>`:""}<span class="sp"></span><button class="btn" data-cm="">+ Nueva</button></div>
+    <div class="clist">${S.comentarios.slice().sort((a,b)=>(a.estado==="Resuelto")-(b.estado==="Resuelto")||((b.fecha||"")>(a.fecha||"")?1:-1)).map(cmHtml).join("")||`<div class="empty">Todavía no hay comentarios. Si algo no se entiende o tenés una idea para mejorar la app, escribila acá.</div>`}</div></div>`;
+}
+function cmHtml(c){return `<div class="cm ${c.estado==="Resuelto"?"done":""}" data-cmo="${c.id}"><div class="row" style="gap:6px"><span class="chip">${esc(c.tipo||"Duda")}</span><b>${esc(c.quien||"Alguien")}</b><span class="sub" style="font-size:12px">${c.fecha?new Date(c.fecha).toLocaleDateString("es-AR"):""}${c.paso?" · "+esc(c.paso):""}</span><span class="sp"></span><span class="chip" style="color:${c.estado==="Resuelto"?"var(--ok)":"var(--warn)"}">${c.estado==="Resuelto"?"✓ Resuelto":"Pendiente"}</span></div>
+  <div style="margin-top:4px">${esc(c.texto)}</div>${c.respuesta?`<div class="cr"><b>Respuesta:</b> ${esc(c.respuesta)}</div>`:""}</div>`}
+function openCm(paso,id){
+  const isNew=!id;const c=S.comentarios.find(x=>x.id===id)||{id:uid(),paso:paso||"",tipo:"Duda",estado:"Pendiente",quien:(()=>{try{return localStorage.getItem("cos_quien")||""}catch(e){return ""}})()};
+  frm.innerHTML=`<div class="mh"><h2>${isNew?"Dejá tu duda o sugerencia":"Comentario"}</h2></div><div class="mb">
+   <label>Tipo<select id="c_tipo">${opt(["Duda","Sugerencia","Algo no funciona"],c.tipo)}</select></label>
+   <label>Tu nombre<input id="c_quien" value="${esc(c.quien)}" placeholder="Ej.: Ara"></label>
+   <label class="full">Sobre qué parte<select id="c_paso"><option value="">General</option>${GUIA.map(g=>`<option ${g.t===c.paso?"selected":""}>${esc(g.t)}</option>`).join("")}</select></label>
+   <label class="full">Contanos<textarea id="c_texto" placeholder="Ej.: no entiendo cómo registrar una historia que no estaba planificada">${esc(c.texto)}</textarea></label>
+   ${isNew?"":`<label class="full">Respuesta (Franco)<textarea id="c_resp" placeholder="Escribí la respuesta…">${esc(c.respuesta)}</textarea></label>
+   <label class="full">Estado<select id="c_estado">${opt(["Pendiente","Resuelto"],c.estado)}</select></label>`}
+  </div><div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button>`}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">${isNew?"Enviar":"Guardar"}</button></div>`;
+  frm.onsubmit=e=>{e.preventDefault();const v=k=>{const el=frm.querySelector("#c_"+k);return el?el.value.trim():""};if(!v("texto")){frm.querySelector("#c_texto").focus();return}
+    try{localStorage.setItem("cos_quien",v("quien"))}catch(_){}
+    const x={...c,tipo:v("tipo"),quien:v("quien"),paso:v("paso"),texto:v("texto"),fecha:c.fecha||new Date().toISOString()};
+    if(!isNew){x.respuesta=v("resp");x.estado=v("estado")||c.estado;if(x.respuesta&&x.estado==="Pendiente"&&!c.respuesta)x.estado="Resuelto"}
+    save("comentarios",x);dlg.close();toast(isNew?"¡Gracias! Franco lo va a ver":"Guardado")};
+  wireModal(()=>{remove("comentarios",c.id);toast("Borrado")});
+  dlg.showModal();
 }
 function openWelcome(){
   const slides=[
@@ -848,7 +969,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-help],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -868,6 +989,10 @@ function bind(){
     if(d.dm){dModel=dModel===d.dm?"":d.dm;render();return}
     if(d.dun!==undefined){dUnused=!dUnused;render();return}
     if(d.act==="welcome")return openWelcome();
+    if(d.help!==undefined){helpOpen=!helpOpen;render();return}
+    if(d.gi!==undefined){gOpen=gOpen===Number(d.gi)?-1:Number(d.gi);render();return}
+    if(d.cm!==undefined)return openCm(d.cm,null);
+    if(d.cmo)return openCm("",d.cmo);
     if(d.go){view=d.go;render();scrollTo(0,0);return}
     if(d.act==="cleanup")return cleanup();
     if(d.act==="newpost")return openPost(null,null);
