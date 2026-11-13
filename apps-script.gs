@@ -210,7 +210,7 @@ function syncAll() {
  * Primera vez: elegí la función setupAvisos y tocá Ejecutar (pide permiso para enviar mails).
  * Para probar sin esperar: ejecutá testDiario, testSemanal o testMensual (te llegan solo a vos).
  */
-const APP_URL = 'https://mkt.sevillanousados.com/';
+const APP_URL = 'https://mkt.sevillanousados.com.ar/';
 const PIL_NAME = { valor: 'Valor', exp: 'Experiencia', prod: 'Producto' };
 const AREA_NAME = { tradicional: '0km Tradicional', ovalo: 'Plan Óvalo', usados: 'Usados', posventa: 'Posventa' };
 const DONE = ['Publicado', 'Multimedios'];
