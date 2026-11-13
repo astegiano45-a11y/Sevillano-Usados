@@ -568,12 +568,16 @@ function vProd(){
   return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn" data-act="cleanup">Devolver ideas sin aprobar al banco</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
   <p class="sub" style="margin:6px 0 0">Arrastrá cada publicación a la columna de su estado, o usá las flechas.</p><div class="board">${cols}</div>`;
 }
+let ideaArea="all";
 function vIdeas(){
   const f=(k,l)=>`<button aria-pressed="${ideaFilter===k}" data-ideaf="${k}">${l}</button>`;
-  const list=S.ideas.filter(i=>ideaFilter==="all"||i.pilar===ideaFilter).sort((a,b)=>(a.prioridad==="Alta"?0:1)-(b.prioridad==="Alta"?0:1));
+  const af=(k,l,c)=>`<button aria-pressed="${ideaArea===k}" data-ideaa="${k}">${c?`<span class="sw ab-${c}"></span>`:""}${l}</button>`;
+  const list=S.ideas.filter(i=>(ideaFilter==="all"||i.pilar===ideaFilter)&&(ideaArea==="all"||(ideaArea==="general"?!i.area:i.area===ideaArea))).sort((a,b)=>(a.prioridad==="Alta"?0:1)-(b.prioridad==="Alta"?0:1));
   return `<div class="row"><h1>Banco de ideas</h1><span class="sp"></span><button class="btn pri" data-act="newidea">+ Idea</button></div>
-  <div class="filters">${f("all","Todas")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}</div>
-  <div class="ideas">${list.length?list.map(i=>`<div class="card idea" data-idea="${i.id}"><div class="row">${pillOf(i.pilar)}${i.sub?`<span class="chip">${esc(i.sub)}</span>`:""}<span class="sp"></span><span class="prio ${(i.prioridad||"").toLowerCase()}">${esc(i.prioridad||"")}</span></div>
+  <div class="filters"><span class="lbl">Pilar</span>${f("all","Todos")}${f("valor","Valor")}${f("exp","Experiencia")}${f("prod","Producto")}</div>
+  <div class="filters"><span class="lbl">Área</span>${af("all","Todas")}${Object.entries(AREAS).map(([k,v])=>af(k,v.name,k)).join("")}${af("general","General")}</div>
+  <p class="sub" style="margin:8px 0 0;font-size:12px">${list.length} idea${list.length===1?"":"s"}</p>
+  <div class="ideas">${list.length?list.map(i=>`<div class="card idea" data-idea="${i.id}"><div class="row">${pillOf(i.pilar)}${areaB(i.area)}${i.sub?`<span class="chip">${esc(i.sub)}</span>`:""}<span class="sp"></span><span class="prio ${(i.prioridad||"").toLowerCase()}">${esc(i.prioridad||"")}</span></div>
     <div class="hook">${esc(i.gancho||i.title)}</div><div class="sub">${esc(i.title)}</div>${i.guion?`<span class="chip" style="align-self:flex-start">Con guion</span>`:""}</div>`).join(""):`<div class="empty" style="grid-column:1/-1">Guardá acá cada idea que se te ocurra. Después la pasás al calendario con un toque.</div>`}</div>`;
 }
 let bibTab="drive",dq="",dFolder="",dType="",dModel="",dUnused=false,rTag="",recQ="";
@@ -724,7 +728,7 @@ const TABHELP={
   ["Registrar lo publicado","Lo mismo que en Inicio: para marcar algo como publicado con su link."]]],
  ideas:["Banco de ideas","La reserva de ideas. No tienen fecha hasta que deciden usarlas.",[
   ["+ Idea","Guardá cualquier idea, aunque sea solo el título."],
-  ["Filtros","Muestra las de un solo pilar."],
+  ["Filtros","Por pilar (Valor, Experiencia, Producto) y por área (0km, Plan Óvalo, Usados, Posventa o General)."],["Área","Cada idea puede tener su área; se ve como etiqueta de color y pasa a la publicación cuando la usás."],
   ["Prioridad","Las de prioridad Alta aparecen primero."],
   ["“Con guion”","La idea ya tiene el guion escrito."],
   ["Pasar al calendario","Dentro de cada idea: la pone en el próximo día de su pilar para producirla."]]],
@@ -864,7 +868,7 @@ function postForm(p){
 function openPost(id,date,from){
   let {p,isNew}=postForm(S.posts.find(x=>x.id===id));
   if(date){p.date=date;p.pilar=pillarForDate(date)||p.pilar}
-  if(from)Object.assign(p,{title:from.title,pilar:from.pilar,sub:from.sub,gancho:from.gancho,guion:from.guion,descripcion:from.descripcion});
+  if(from)Object.assign(p,{title:from.title,pilar:from.pilar,area:from.area||"",sub:from.sub,gancho:from.gancho,guion:from.guion,descripcion:from.descripcion});
   frm.innerHTML=`<div class="mh"><h2>${isNew?"Nueva publicación":"Publicación"}</h2><span class="sp"></span>${pillOf(p.pilar)}</div>
   <div class="mb">
     <label class="full">Título<input id="f_title" required value="${esc(p.title)}" placeholder="Ej.: 5 cosas para revisar en un usado"></label>
@@ -925,6 +929,7 @@ function openIdea(id){
   <div class="mb">
     <label class="full">Idea<input id="i_title" required value="${esc(x.title)}"></label>
     <label>Pilar<select id="i_pilar">${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${x.pilar===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
+    <label>Área<select id="i_area"><option value="">General (todas)</option>${Object.entries(AREAS).map(([k,v])=>`<option value="${k}" ${x.area===k?"selected":""}>${v.name}</option>`).join("")}</select></label>
     <label>Sección<select id="i_sub">${subsOpts(x.pilar,x.sub)}</select></label>
     <label>Prioridad<select id="i_prio">${opt(["Alta","Media","Baja"],x.prioridad)}</select></label>
     <label class="full">Gancho<input id="i_gancho" value="${esc(x.gancho)}"></label>
@@ -934,7 +939,7 @@ function openIdea(id){
   <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><button type="button" class="btn" data-plan>Pasar al calendario</button>`}
   <span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
   frm.querySelector("#i_pilar").onchange=e=>frm.querySelector("#i_sub").innerHTML=subsOpts(e.target.value,"");
-  const read=()=>{const v=k=>frm.querySelector("#i_"+k).value.trim();return {...x,title:v("title"),pilar:v("pilar"),sub:v("sub"),prioridad:v("prio"),gancho:v("gancho"),descripcion:v("desc"),guion:v("guion")}};
+  const read=()=>{const v=k=>frm.querySelector("#i_"+k).value.trim();return {...x,title:v("title"),pilar:v("pilar"),area:v("area"),sub:v("sub"),prioridad:v("prio"),gancho:v("gancho"),descripcion:v("desc"),guion:v("guion")}};
   frm.onsubmit=e=>{e.preventDefault();const r=read();if(!r.title)return;save("ideas",r);dlg.close();toast("Idea guardada")};
   const pl=frm.querySelector("[data-plan]");if(pl)pl.onclick=()=>{const r=read();dlg.close();
     const day=PIL[r.pilar].day;const d=new Date();d.setDate(d.getDate()+((day-d.getDay()+7)%7||7));openPost(null,ymd(d),r)};
@@ -961,7 +966,7 @@ function pickIdea(date,pk){
   const list=S.ideas.filter(i=>i.pilar===pk).sort((a,b)=>(a.prioridad==="Alta"?0:1)-(b.prioridad==="Alta"?0:1));
   frm.innerHTML=`<div class="mh"><h2>Elegí una idea · ${PIL[pk].short} · ${fmtDay(date)}</h2></div>
   <div class="mb"><div class="full" style="display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow:auto">
-  ${list.length?list.map(i=>`<button type="button" class="item" data-pi="${i.id}" style="text-align:left;font:inherit;color:inherit"><div class="txt"><div class="t">${esc(i.gancho||i.title)}</div><div class="sub" style="font-size:12px">${esc(i.title)}${i.sub?" · "+esc(i.sub):""}</div></div></button>`).join(""):`<div class="empty">No hay ideas de ${PIL[pk].short} en el banco. Creá una nueva.</div>`}
+  ${list.length?list.map(i=>`<button type="button" class="item" data-pi="${i.id}" style="text-align:left;font:inherit;color:inherit"><div class="txt"><div class="t">${areaB(i.area)} ${esc(i.gancho||i.title)}</div><div class="sub" style="font-size:12px">${esc(i.title)}${i.sub?" · "+esc(i.sub):""}</div></div></button>`).join(""):`<div class="empty">No hay ideas de ${PIL[pk].short} en el banco. Creá una nueva.</div>`}
   </div></div><div class="mf"><span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button type="button" class="btn pri" data-newp>+ Crear una nueva</button></div>`;
   frm.querySelector("[data-close]").onclick=()=>dlg.close();
   frm.querySelector("[data-newp]").onclick=()=>{dlg.close();openPost(null,date)};
@@ -1008,7 +1013,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-help],[data-hex],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-help],[data-hex],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-ideaa],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -1042,6 +1047,7 @@ function bind(){
     if(d.mode){calMode=d.mode;try{localStorage.setItem("cos_calmode",calMode)}catch(_){}render();return}
     if(d.calf){calFilter=d.calf;render();return}
     if(d.areaf){areaFilter=d.areaf;render();return}
+    if(d.ideaa){ideaArea=d.ideaa;render();return}
     if(d.ideaf){ideaFilter=d.ideaf;render();return}
     if(d.addsub!==undefined){const b=structuredClone(brand());b.subs[d.addsub]=[...b.subs[d.addsub],"Nuevo subtema"];saveBrand(b);return}
     if(d.madd!==undefined){const b=structuredClone(brand());b.mails=[...(b.mails||[]),{email:"",diario:true,semanal:true,mensual:false}];saveBrand(b);return}
