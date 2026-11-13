@@ -161,7 +161,10 @@ h2{font-size:18px;font-weight:700}
 .gbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}
 .gbar span{display:block;height:100%;border-radius:99px;background:var(--accent)}
 .goal-ok .gbar span{background:var(--ok)}.goal-bad .gbar span{background:var(--warn)}
-.goal-bad{border-color:var(--warn)}.goal-bad .gmsg{color:var(--warn);font-weight:600}
+.goal-bad{border-color:var(--warn)}.goal-bad .gchecks{display:flex;gap:6px;flex-wrap:wrap}
+.gc{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.gc.on{background:var(--exp-soft);color:var(--exp);border-color:transparent}
+.gmsg{color:var(--warn);font-weight:600}
 .gmsg{font-size:13px;color:var(--muted)}
 .mtable{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
 .mtable th{font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 4px;font-weight:500}
@@ -260,7 +263,7 @@ const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","
 const S={posts:[],tasks:[],ideas:[],brand:null};
 let calMode=(()=>{try{return localStorage.getItem("cos_calmode")||"semana"}catch(e){return "semana"}})();
 let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
-const DEF_BRAND={goal:3,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
+const DEF_BRAND={goal:3,goalHist:1,goalFeed:2,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
   metas:["3 publicaciones por semana (L/M/V)","Cada auto del stock publicado al menos una vez por mes","Responder consultas de WhatsApp en menos de 1 hora"],
   subs:{valor:PIL.valor.subs,exp:PIL.exp.subs,prod:PIL.prod.subs},
   desc:{valor:"Educa y genera confianza: lo que hay que saber antes de comprar un usado en Tierra del Fuego.",exp:"Muestra personas reales: clientes, equipo y lo que pasa en la agencia.",prod:"Vende: los autos, lo que traen y cómo se pagan."}};
@@ -412,6 +415,10 @@ function vHoy(){
     const st=done>=g?"ok":late?"bad":"mid";const pct=Math.min(100,Math.round(done/g*100));
     return `<div class="goal goal-${st}"><div class="row"><span class="eyebrow">Objetivo semanal</span><span class="sp"></span><b class="gnum">${done} de ${g} publicadas</b></div>
     <div class="gbar"><span style="width:${pct}%"></span></div>
+    <div class="gchecks">${(()=>{const D=ws.filter(p=>["Publicado","Multimedios"].includes(p.estado));const b=brand();
+      const h=D.filter(p=>p.formato==="Historia").length,f=D.filter(p=>p.formato==="Reel"||p.formato==="Carrusel").length;
+      const c=(ok,txt)=>`<span class="gc ${ok?"on":""}">${ok?"✓":"○"} ${txt}</span>`;
+      return c(h>=(b.goalHist||1),`Historias ${h}/${b.goalHist||1}`)+c(f>=(b.goalFeed||2),`Reel o carrusel ${f}/${b.goalFeed||2}`)+Object.entries(PIL).map(([k,v])=>c(D.some(p=>p.pilar===k),v.short)).join("")})()}</div>
     <div class="gmsg">${done>=g?"¡Objetivo cumplido esta semana!":late?`Van ${late} atrasada${late>1?"s":""}. Planificadas esta semana: ${ws.length}.`:ws.length<g?`Faltan planificar ${g-ws.length} publicación${g-ws.length>1?"es":""} esta semana.`:"Vamos bien. Seguí moviendo las tarjetas a Publicado."}</div></div>`})()}
   <div class="stats">
     <div class="card stat"><div class="eyebrow">Publicadas este mes</div><div class="n">${pubMes}</div></div>
@@ -516,7 +523,11 @@ function vMarca(){
   <div class="card" style="margin-top:18px">
     <h2>Objetivo y avisos por mail</h2>
     <p class="sub" style="margin:6px 0 0">Los mails los manda la planilla sola. Diario: lunes a viernes 8:30. Semanal: viernes 17:00. Mensual: el día 1 a las 9:00.</p>
-    <label style="max-width:260px;margin-top:12px">Publicaciones por semana (objetivo)<input type="number" min="1" max="30" id="m_goal" value="${esc(b.goal||3)}"></label>
+    <div class="row" style="margin-top:12px;align-items:flex-end">
+      <label style="max-width:200px">Publicaciones por semana<input type="number" min="1" max="30" id="m_goal" data-gk="goal" value="${esc(b.goal||3)}"></label>
+      <label style="max-width:200px">Mínimo de historias<input type="number" min="0" max="30" id="m_goalHist" data-gk="goalHist" value="${esc(b.goalHist??1)}"></label>
+      <label style="max-width:200px">Mínimo de reels o carruseles<input type="number" min="0" max="30" id="m_goalFeed" data-gk="goalFeed" value="${esc(b.goalFeed??2)}"></label></div>
+    <p class="sub" style="margin:6px 0 0;font-size:12px">Además se controla que haya al menos una de cada pilar: valor, experiencia y producto.</p>
     <div style="overflow-x:auto"><table class="mtable"><thead><tr><th>Mail</th><th class="c">Diario</th><th class="c">Semanal</th><th class="c">Mensual</th><th></th></tr></thead><tbody>
     ${(b.mails||[]).map((m,i)=>`<tr><td><input type="email" id="m_mail_${i}" data-mi="${i}" data-mf="email" value="${esc(m.email)}" placeholder="nombre@gmail.com"></td>
       ${["diario","semanal","mensual"].map(k=>`<td class="c"><input type="checkbox" id="m_${k}_${i}" data-mi="${i}" data-mf="${k}" ${m[k]?"checked":""} aria-label="${k}"></td>`).join("")}
@@ -648,7 +659,7 @@ function bind(){
   m.onkeydown=e=>{if(e.key==="Enter"&&e.target.matches(".slot")){e.target.click()}};
   m.querySelectorAll("[data-mf]").forEach(el=>el.onchange=()=>{const b=structuredClone(brand());const i=Number(el.dataset.mi);const f=el.dataset.mf;
     if(f==="email"){const v=el.value.trim();if(v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){toast("Revisá el mail: "+v);return}b.mails[i].email=v}else b.mails[i][f]=el.checked;saveBrand(b)});
-  const mg=m.querySelector("#m_goal");if(mg)mg.onchange=()=>{const b=structuredClone(brand());b.goal=Math.max(1,Number(mg.value)||3);saveBrand(b)};
+  m.querySelectorAll("[data-gk]").forEach(el=>el.onchange=()=>{const b=structuredClone(brand());b[el.dataset.gk]=Math.max(el.dataset.gk==="goal"?1:0,Number(el.value)||0);saveBrand(b)});
   m.querySelectorAll("[contenteditable]").forEach(el=>{
     el.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();el.blur()}};
     el.onblur=()=>{const b=structuredClone(brand());const v=el.textContent.trim();const d=el.dataset;

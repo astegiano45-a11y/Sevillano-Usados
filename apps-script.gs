@@ -222,7 +222,7 @@ function setupAvisos() {
 function cfg_() {
   const d = readAll_();
   const b = (d.config || []).find(x => x.id === 'brand') || {};
-  return { data: d, goal: Number(b.goal) || 3, mails: (b.mails || []).filter(m => m.email) };
+  return { data: d, goal: Number(b.goal) || 3, gHist: b.goalHist == null ? 1 : Number(b.goalHist), gFeed: b.goalFeed == null ? 2 : Number(b.goalFeed), mails: (b.mails || []).filter(m => m.email) };
 }
 const fmt_ = d => Utilities.formatDate(d, TZ, 'yyyy-MM-dd');
 const nice_ = s => { const d = ymd_(s); return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); };
@@ -240,6 +240,12 @@ function occurs_(t, s) {
   return diff % (t.repeat === 'quincenal' ? 14 : 7) <= len;
 }
 
+function checks_(done, c) {
+  const h = done.filter(p => p.formato === 'Historia').length, f = done.filter(p => p.formato === 'Reel' || p.formato === 'Carrusel').length;
+  const it = (ok, t) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:3px 10px;border-radius:12px;font-size:13px;' + (ok ? 'background:#E1F5EC;color:#0E9F6E' : 'background:#FDEBDF;color:#C2410C') + '">' + (ok ? '✓ ' : '✗ ') + t + '</span>';
+  return '<p>' + it(h >= c.gHist, 'Historias ' + h + '/' + c.gHist) + it(f >= c.gFeed, 'Reel o carrusel ' + f + '/' + c.gFeed) +
+    Object.keys(PIL_NAME).map(k => it(done.some(p => p.pilar === k), PIL_NAME[k])).join('') + '</p>';
+}
 function postLine_(p) {
   return '<li><b>' + esc_(p.title) + '</b> <span style="color:#5D6880">· ' + nice_(p.date) + ' · ' + (PIL_NAME[p.pilar] || 'Sin pilar') +
     (p.area ? ' · ' + AREA_NAME[p.area] : '') + ' · ' + esc_(p.formato || '') + ' · <i>' + esc_(p.estado || 'Idea') + '</i></span></li>';
@@ -262,7 +268,7 @@ function send_(kind, subject, html, onlyMe) {
 }
 
 function buildDiario_() {
-  const { data, goal } = cfg_(); const today = new Date(); const t = fmt_(today); const ayer = fmt_(add_(today, -1));
+  const c = cfg_(); const { data, goal } = c; const today = new Date(); const t = fmt_(today); const ayer = fmt_(add_(today, -1));
   const mon = fmt_(monday_(today)), sun = fmt_(add_(monday_(today), 6));
   const hoyP = data.posts.filter(p => p.date === t);
   const atras = data.posts.filter(p => p.date < t && p.date >= fmt_(add_(today, -14)) && DONE.indexOf(p.estado) < 0);
@@ -272,19 +278,20 @@ function buildDiario_() {
   h += '<h3>📲 Hoy se publica</h3>' + (hoyP.length ? '<ul>' + hoyP.map(postLine_).join('') + '</ul>' : '<p style="color:#5D6880">No hay publicación planificada para hoy.</p>');
   if (atras.length) h += '<h3 style="color:#C2410C">⚠️ Atrasadas (no se marcaron como publicadas)</h3><ul>' + atras.map(postLine_).join('') + '</ul>';
   h += '<h3>📅 Agenda de hoy</h3>' + (hoyT.length ? '<ul>' + hoyT.map(x => '<li>' + (x.time ? '<b>' + x.time + '</b> ' : '') + esc_(x.title) + (x.lugar ? ' <span style="color:#5D6880">· ' + esc_(x.lugar) + '</span>' : '') + '</li>').join('') + '</ul>' : '<p style="color:#5D6880">Sin reuniones ni eventos.</p>');
-  h += '<h3>🎯 Objetivo semanal: ' + done + ' de ' + goal + '</h3>' + bar_(done, goal);
+  h += '<h3>🎯 Objetivo semanal: ' + done + ' de ' + goal + '</h3>' + bar_(done, goal) + checks_(week.filter(p => DONE.indexOf(p.estado) >= 0), c);
   if (today.getDay() === 4 && done + week.filter(p => p.date > t).length < goal) h += '<p style="color:#C2410C"><b>Ojo:</b> con lo planificado no llegan al objetivo de esta semana. Sumen una publicación.</p>';
   return { subject: (atras.length ? '⚠️ ' : '') + 'Hoy en Marketing · ' + nice_(t), html: wrap_('Resumen del día · ' + nice_(t), h) };
 }
 function mailDiario() { const d = new Date().getDay(); if (d === 0 || d === 6) return; const r = buildDiario_(); send_('diario', r.subject, r.html); }
 function testDiario() { const r = buildDiario_(); send_('diario', '[Prueba] ' + r.subject, r.html, true); }
 
-function resumen_(from, to, goalTotal, label) {
-  const { data } = cfg_();
+function resumen_(from, to, goalTotal, weekly) {
+  const c = cfg_(); const { data } = c;
   const ps = data.posts.filter(p => p.date >= from && p.date <= to);
   const done = ps.filter(p => DONE.indexOf(p.estado) >= 0); const pend = ps.filter(p => DONE.indexOf(p.estado) < 0);
   const cnt = (arr, key, names) => Object.keys(names).map(k => names[k] + ': <b>' + arr.filter(p => p[key] === k).length + '</b>').join(' · ') + ' · Sin asignar: <b>' + arr.filter(p => !names[p[key]]).length + '</b>';
   let h = '<h3>🎯 ' + done.length + ' de ' + goalTotal + ' publicaciones (' + Math.round(done.length / goalTotal * 100) + '%)</h3>' + bar_(done.length, goalTotal);
+  if (weekly) h += checks_(done, c);
   h += '<p><b>Por pilar:</b> ' + cnt(done, 'pilar', PIL_NAME) + '</p><p><b>Por área:</b> ' + cnt(done, 'area', AREA_NAME) + '</p>';
   const mm = done.filter(p => p.estado === 'Multimedios').length; if (mm) h += '<p><b>En multimedios (radio, diario, TV):</b> ' + mm + '</p>';
   h += '<h3>✅ Publicadas</h3>' + (done.length ? '<ul>' + done.map(postLine_).join('') + '</ul>' : '<p style="color:#5D6880">Ninguna.</p>');
@@ -293,7 +300,7 @@ function resumen_(from, to, goalTotal, label) {
 }
 function buildSemanal_() {
   const { data, goal } = cfg_(); const mon = monday_(new Date());
-  let h = resumen_(fmt_(mon), fmt_(add_(mon, 6)), goal);
+  let h = resumen_(fmt_(mon), fmt_(add_(mon, 6)), goal, true);
   const nMon = add_(mon, 7); const next = data.posts.filter(p => p.date >= fmt_(nMon) && p.date <= fmt_(add_(nMon, 6)));
   h += '<h3>🗓️ La semana que viene</h3>' + (next.length ? '<ul>' + next.map(postLine_).join('') + '</ul>' : '') +
     (next.length < goal ? '<p style="color:#C2410C">Hay ' + next.length + ' planificadas de ' + goal + '. Completen el calendario antes del lunes.</p>' : '');
