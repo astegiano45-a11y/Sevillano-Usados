@@ -11,7 +11,10 @@ const SHEETS = {
   posts:  ['id', 'fecha', 'pilar', 'seccion', 'titulo', 'estado', 'formato', 'red', 'gancho', 'actualizado', 'json'],
   tasks:  ['id', 'fecha', 'hora', 'tipo', 'titulo', 'hecha', 'lugar', 'actualizado', 'json'],
   ideas:  ['id', 'pilar', 'seccion', 'titulo', 'prioridad', 'gancho', 'actualizado', 'json'],
-  config: ['id', 'actualizado', 'json']
+  config: ['id', 'actualizado', 'json'],
+  refs: ['id', 'titulo', 'pilar', 'actualizado', 'json'],
+  recursos: ['id', 'categoria', 'titulo', 'actualizado', 'json'],
+  drive: ['id', 'nombre', 'carpeta', 'tipo', 'fecha', 'json']
 };
 
 const PILARES = { valor: 'Valor', exp: 'Experiencia', prod: 'Producto' };
@@ -26,7 +29,7 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     if (body.action === 'all') return json_({ ok: true, data: readAll_() });
-    if (!SHEETS[body.sheet]) return json_({ ok: false, error: 'Hoja desconocida' });
+    if (!SHEETS[body.sheet] || body.sheet === 'drive') return json_({ ok: false, error: 'Hoja desconocida' });
     if (body.action === 'upsert') { upsert_(body.sheet, body.item); try { calSync_(body.sheet, body.item); } catch (e) {} return json_({ ok: true }); }
     if (body.action === 'delete') { del_(body.sheet, body.id); try { calDelete_(body.sheet, body.id); } catch (e) {} return json_({ ok: true }); }
     return json_({ ok: false, error: 'Acción desconocida' });
@@ -66,9 +69,9 @@ function row_(name, it) {
   const now = new Date();
   const map = {
     id: it.id, fecha: it.date || '', hora: it.time || '', pilar: PILARES[it.pilar] || '',
-    seccion: it.sub || '', titulo: it.title || '', estado: it.estado || '', formato: it.formato || '',
+    seccion: it.sub || '', titulo: it.title || it.titulo || it.nota || '', estado: it.estado || '', formato: it.formato || '',
     red: it.red || '', gancho: it.gancho || '', tipo: it.tipo || '', hecha: it.done ? 'Sí' : 'No',
-    lugar: it.lugar || '', prioridad: it.prioridad || '', actualizado: now, json: JSON.stringify(it)
+    lugar: it.lugar || '', prioridad: it.prioridad || '', categoria: it.cat || '', actualizado: now, json: JSON.stringify(it)
   };
   return SHEETS[name].map(h => map[h]);
 }
@@ -213,6 +216,9 @@ const DONE = ['Publicado', 'Multimedios'];
 
 function setupAvisos() {
   ScriptApp.getProjectTriggers().filter(t => /^mail(Diario|Semanal|Mensual)$/.test(t.getHandlerFunction())).forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'syncDrive').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('syncDrive').timeBased().everyHours(1).create();
+  try { syncDrive(); } catch (e) { Logger.log('Drive: ' + e); }
   ScriptApp.newTrigger('mailDiario').timeBased().everyDays(1).atHour(8).nearMinute(30).inTimezone(TZ).create();
   ScriptApp.newTrigger('mailSemanal').timeBased().onWeekDay(ScriptApp.WeekDay.FRIDAY).atHour(17).inTimezone(TZ).create();
   ScriptApp.newTrigger('mailMensual').timeBased().onMonthDay(1).atHour(9).inTimezone(TZ).create();
@@ -320,3 +326,37 @@ function buildMensual_() {
 }
 function mailMensual() { const r = buildMensual_(); send_('mensual', r.subject, r.html); }
 function testMensual() { const r = buildMensual_(); send_('mensual', '[Prueba] ' + r.subject, r.html, true); }
+
+/* ================= BIBLIOTECA DE DRIVE =================
+ * Lee la carpeta configurada en la app (Marca → Carpeta de Drive) y la copia a la hoja "drive".
+ * Corre sola cada hora (la programa setupAvisos). Se puede ejecutar a mano: syncDrive.
+ */
+const MODELOS = ['Ranger', 'Everest', 'Territory', 'Bronco', 'Maverick', 'Kuga', 'EcoSport', 'Focus', 'Ka', 'Transit', 'F-150', 'Mustang', 'Raptor'];
+function syncDrive() {
+  const b = (readAll_().config || []).find(x => x.id === 'brand') || {};
+  const m = String(b.driveFolder || '').match(/folders\/([\w-]+)/) || String(b.driveFolder || '').match(/^([\w-]{20,})$/);
+  if (!m) { Logger.log('No hay carpeta de Drive configurada en Marca.'); return; }
+  const out = [];
+  const walk = (folder, path, depth) => {
+    const files = folder.getFiles();
+    while (files.hasNext() && out.length < 3000) {
+      const f = files.next(); const mime = f.getMimeType();
+      const tipo = mime.indexOf('video/') === 0 ? 'Video' : mime.indexOf('image/') === 0 ? 'Imagen' : null;
+      if (!tipo) continue;
+      const name = f.getName();
+      const mod = MODELOS.find(x => name.toLowerCase().replace(/[\s_-]/g, '').indexOf(x.toLowerCase().replace(/[\s_-]/g, '')) >= 0) || '';
+      const it = { id: f.getId(), nombre: name, carpeta: path, tipo: tipo, modelo: mod, fecha: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd') };
+      out.push([it.id, it.nombre, it.carpeta, it.tipo, it.fecha, JSON.stringify(it)]);
+    }
+    if (depth > 4) return;
+    const subs = folder.getFolders();
+    while (subs.hasNext()) { const s = subs.next(); walk(s, path + ' / ' + s.getName(), depth + 1); }
+  };
+  const root = DriveApp.getFolderById(m[1]);
+  walk(root, root.getName(), 0);
+  const sh = sheet_('drive');
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, SHEETS.drive.length).clearContent();
+  if (out.length) sh.getRange(2, 1, out.length, SHEETS.drive.length).setValues(out);
+  upsert_('config', { id: 'drivemeta', at: new Date().toISOString(), count: out.length });
+  Logger.log('Biblioteca: ' + out.length + ' archivos.');
+}

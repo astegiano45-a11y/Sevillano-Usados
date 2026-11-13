@@ -177,6 +177,15 @@ h2{font-size:18px;font-weight:700}
 .guide li::before{content:counter(g);position:absolute;top:12px;left:16px;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font:700 12px var(--f-mono);display:grid;place-items:center}
 .guide li p{margin:0;line-height:1.55;flex:1}
 .guide li .btn{align-self:flex-start}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:14px}
+.dcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.dthumb{position:relative;display:block;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:var(--bg);max-width:100%}
+.dthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dph{display:grid;place-items:center;height:100%;font-size:28px;color:var(--muted)}
+.dtype{position:absolute;left:6px;bottom:6px;font:600 10px var(--f-mono);background:rgba(0,0,0,.6);color:#fff;padding:2px 6px;border-radius:4px}
+.dname{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dmeta{font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.dcard .btn{font-size:12px;padding:6px 10px}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -240,6 +249,8 @@ body{margin:0}
       <button role="tab" data-v="cal">Calendario</button>
       <button role="tab" data-v="prod">Producción</button>
       <button role="tab" data-v="ideas">Banco de ideas</button>
+      <button role="tab" data-v="bib">Biblioteca</button>
+      <button role="tab" data-v="rec">Recursos</button>
       <button role="tab" data-v="marca">Marca</button>
       <button role="tab" data-v="guia">Guía</button>
     </nav>
@@ -266,7 +277,8 @@ const REDES=["Instagram","TikTok","Facebook","WhatsApp","Radio","Diario","TV","P
 const DIAS=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
-const S={posts:[],tasks:[],ideas:[],brand:null};
+const S={posts:[],tasks:[],ideas:[],refs:[],recursos:[],drive:[],driveMeta:null,brand:null};
+const COLLS=["posts","tasks","ideas","refs","recursos"];
 let calMode=(()=>{try{return localStorage.getItem("cos_calmode")||"semana"}catch(e){return "semana"}})();
 let db=null, view="hoy", calMonth=new Date(), ideaFilter="all", calFilter="all";
 const DEF_BRAND={goal:3,goalHist:1,goalFeed:2,goalPlaca:0,mails:[],tono:"Cercano, claro y confiable. Hablamos como un vendedor que sabe de autos y del sur: sin vueltas, con datos concretos y siempre con una salida a WhatsApp.",
@@ -318,7 +330,7 @@ async function push(body){
   try{await api(body);setStatus(true,"Sincronizado con Google Sheets")}
   catch(e){setStatus(false,"Sin conexión: guardado en este navegador");toast("No se pudo sincronizar. Quedó guardado en este navegador.")}
 }
-function persist(){["posts","tasks","ideas"].forEach(k=>local.set(k,S[k]));local.set("brand",S.brand)}
+function persist(){COLLS.forEach(k=>local.set(k,S[k]));local.set("brand",S.brand);local.set("drive",S.drive);local.set("driveMeta",S.driveMeta)}
 async function save(coll,item){
   item={...item,updated:new Date().toISOString()};
   const i=S[coll].findIndex(x=>x.id===item.id);
@@ -334,14 +346,14 @@ async function pull(){
   if(importing||dlg.open||document.activeElement&&document.activeElement.isContentEditable)return;
   try{
     const j=await api({action:"all"});
-    ["posts","tasks","ideas"].forEach(k=>S[k]=j.data[k]||[]);
+    COLLS.forEach(k=>S[k]=j.data[k]||[]);S.drive=j.data.drive||[];S.driveMeta=(j.data.config||[]).find(x=>x.id==="drivemeta")||null;
     const b=(j.data.config||[]).find(x=>x.id==="brand");S.imports=(j.data.config||[]).find(x=>x.id==="imports")||null;S.brand=b||S.brand;
     persist();render();setStatus(true,"Sincronizado con Google Sheets");
   }catch(e){setStatus(false,"Sin conexión: mostrando la copia de este navegador")}
 }
 async function init(){
   const has=local.get("posts");
-  ["posts","tasks","ideas"].forEach(k=>S[k]=local.get(k)||(has?[]:SEED[k]));S.brand=local.get("brand");
+  COLLS.forEach(k=>S[k]=local.get(k)||(has?[]:(SEED[k]||[])));S.brand=local.get("brand");S.drive=local.get("drive")||[];S.driveMeta=local.get("driveMeta");
   if(!has)persist();
   render();
   if(!sheetUrl){setStatus(false,"Sin sincronizar · tocá para conectar");importIdeas();return}
@@ -365,9 +377,9 @@ function openSync(){
   frm.onsubmit=async e=>{e.preventDefault();const u=frm.querySelector("#s_url").value.trim();
     if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){toast("La URL tiene que empezar con script.google.com y terminar en /exec");return}
     sheetUrl=u;local.set("sheet",u);dlg.close();setStatus(false,"Sincronizando…");
-    const before={posts:S.posts,tasks:S.tasks,ideas:S.ideas};
+    const before={posts:S.posts,tasks:S.tasks,ideas:S.ideas,refs:S.refs,recursos:S.recursos};
     try{const j=await api({action:"all"});
-      if(!(j.data.posts||[]).length&&before.posts.length){for(const k of ["posts","tasks","ideas"])for(const it of before[k])await api({action:"upsert",sheet:k,item:it});if(S.brand)await api({action:"upsert",sheet:"config",item:{id:"brand",...S.brand}});toast("Subimos tus datos a la planilla")}
+      if(!(j.data.posts||[]).length&&before.posts.length){for(const k of COLLS)for(const it of (before[k]||[]))await api({action:"upsert",sheet:k,item:it});if(S.brand)await api({action:"upsert",sheet:"config",item:{id:"brand",...S.brand}});toast("Subimos tus datos a la planilla")}
       await pull();
     }catch(err){setStatus(false,"No se pudo conectar");toast("No se pudo conectar. Revisá que el acceso sea 'Cualquier usuario'.")}
   };
@@ -395,7 +407,7 @@ function weekDates(){const n=new Date();const g=n.getDay();const mon=new Date(n)
 function render(){
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===view));
   const m=document.getElementById("main");
-  m.innerHTML=({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,marca:vMarca,guia:vGuia})[view]();
+  m.innerHTML=({hoy:vHoy,cal:vCal,prod:vProd,ideas:vIdeas,bib:vBib,rec:vRec,marca:vMarca,guia:vGuia})[view]();
   bind();
 }
 function vHoy(){
@@ -518,6 +530,102 @@ function vIdeas(){
   <div class="ideas">${list.length?list.map(i=>`<div class="card idea" data-idea="${i.id}"><div class="row">${pillOf(i.pilar)}${i.sub?`<span class="chip">${esc(i.sub)}</span>`:""}<span class="sp"></span><span class="prio ${(i.prioridad||"").toLowerCase()}">${esc(i.prioridad||"")}</span></div>
     <div class="hook">${esc(i.gancho||i.title)}</div><div class="sub">${esc(i.title)}</div>${i.guion?`<span class="chip" style="align-self:flex-start">Con guion</span>`:""}</div>`).join(""):`<div class="empty" style="grid-column:1/-1">Guardá acá cada idea que se te ocurra. Después la pasás al calendario con un toque.</div>`}</div>`;
 }
+let bibTab="drive",dq="",dFolder="",dType="",dModel="",dUnused=false,rTag="",recQ="";
+const MODELOS=["Ranger","Everest","Territory","Bronco","Maverick","Kuga","EcoSport","Focus","Ka","Transit","F-150","Mustang","Raptor"];
+const usedIn=id=>S.posts.filter(p=>(p.driveIds||[]).includes(id));
+function vBib(){
+  const seg=`<div class="seg"><button aria-pressed="${bibTab==="drive"}" data-bt="drive">Material de Drive</button><button aria-pressed="${bibTab==="refs"}" data-bt="refs">Referencias</button></div>`;
+  if(bibTab==="refs")return vRefs(seg);
+  const meta=S.driveMeta;const folders=[...new Set(S.drive.map(f=>f.carpeta))].sort();
+  const list=S.drive.filter(f=>(!dFolder||f.carpeta===dFolder)&&(!dType||f.tipo===dType)&&(!dModel||f.modelo===dModel)&&(!dUnused||!usedIn(f.id).length)&&(!dq||(f.nombre+" "+f.carpeta).toLowerCase().includes(dq.toLowerCase())))
+    .sort((a,b)=>(b.fecha||"")>(a.fecha||"")?1:-1);
+  const models=MODELOS.filter(m=>S.drive.some(f=>f.modelo===m));
+  return `<div class="row"><h1>Biblioteca</h1><span class="sp"></span>${seg}</div>
+  <p class="sub" style="margin:6px 0 0">${meta?`${S.drive.length} archivos de la carpeta de Drive · actualizada ${new Date(meta.at).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short"})} · se actualiza sola cada hora`:`Todavía no se leyó la carpeta de Drive. Cargá el link de la carpeta en <b>Marca</b> y ejecutá <b>setupAvisos</b> en Apps Script.`}</p>
+  <div class="filters" style="align-items:center">
+    <input id="d_q" placeholder="Buscar por nombre…" value="${esc(dq)}" style="max-width:220px">
+    <select id="d_folder" style="max-width:220px"><option value="">Todas las carpetas</option>${folders.map(f=>`<option ${f===dFolder?"selected":""}>${esc(f)}</option>`).join("")}</select>
+    <select id="d_type" style="max-width:140px"><option value="">Videos e imágenes</option><option ${dType==="Video"?"selected":""}>Video</option><option ${dType==="Imagen"?"selected":""}>Imagen</option></select>
+    <button aria-pressed="${dUnused}" data-dun>Sin usar</button>
+    ${models.map(m=>`<button aria-pressed="${dModel===m}" data-dm="${m}">${m}</button>`).join("")}
+  </div>
+  <div class="dgrid">${list.slice(0,300).map(f=>{const u=usedIn(f.id);return `<div class="dcard">
+    <a class="dthumb" href="https://drive.google.com/file/d/${f.id}/view" target="_blank" rel="noopener"><img loading="lazy" alt="" src="https://drive.google.com/thumbnail?id=${f.id}&sz=w400" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'dph',textContent:'${f.tipo==="Video"?"▶":"🖼"}'}))"><span class="dtype">${f.tipo==="Video"?"▶ Video":"Imagen"}</span></a>
+    <div class="dname" title="${esc(f.nombre)}">${esc(f.nombre)}</div>
+    <div class="dmeta">${esc(f.carpeta)}${f.fecha?" · "+fmtDay(f.fecha):""}</div>
+    ${u.length?`<span class="chip" style="align-self:flex-start;color:var(--ok)">✓ Usado: ${esc(u[0].title)}${u.length>1?" +"+(u.length-1):""}</span>`:`<span class="chip" style="align-self:flex-start">Sin usar</span>`}
+    <button class="btn" data-use="${f.id}">Usar en publicación</button></div>`}).join("")||`<div class="empty" style="grid-column:1/-1">${S.drive.length?"Ningún archivo coincide con los filtros.":"Acá van a aparecer solos los videos e imágenes de la carpeta de Drive."}</div>`}</div>
+  ${list.length>300?`<p class="sub">Se muestran 300 de ${list.length}. Usá los filtros para encontrar el resto.</p>`:""}`;
+}
+const REF_TAGS=["Gancho","Edición","Audio","Formato","Tendencia","Humor","Producto"];
+function vRefs(seg){
+  const list=S.refs.filter(r=>!rTag||(r.tags||[]).includes(rTag)).sort((a,b)=>(b.updated||"")>(a.updated||"")?1:-1);
+  const net=l=>/tiktok/i.test(l)?"TikTok":/youtu/i.test(l)?"YouTube":/facebook|fb\./i.test(l)?"Facebook":/instagram/i.test(l)?"Instagram":"Link";
+  return `<div class="row"><h1>Biblioteca</h1><span class="sp"></span>${seg}<button class="btn pri" data-act="newref">+ Referencia</button></div>
+  <p class="sub" style="margin:6px 0 0">Los reels que les gustan, guardados en un solo lugar. En Android: desde Instagram, <b>Compartir → Marketing FS → Es una referencia</b>.</p>
+  <div class="filters"><button aria-pressed="${!rTag}" data-rt="">Todas</button>${REF_TAGS.map(t=>`<button aria-pressed="${rTag===t}" data-rt="${t}">${t}</button>`).join("")}</div>
+  <div class="ideas">${list.map(r=>`<div class="card idea" data-ref="${r.id}"><div class="row"><span class="chip">${net(r.link||"")}</span>${pillOf(r.pilar)}${areaB(r.area)}<span class="sp"></span>${r.usada?`<span class="prio" style="color:var(--ok)">Usada</span>`:""}</div>
+    <div class="hook">${esc(r.nota||"Sin nota")}</div>
+    <div class="row" style="gap:4px">${(r.tags||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div>
+    <div class="row"><a class="btn" href="${esc(r.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Abrir ↗</a>${r.quien?`<span class="sub" style="font-size:12px">Subida por ${esc(r.quien)}</span>`:""}</div></div>`).join("")||`<div class="empty" style="grid-column:1/-1">Todavía no hay referencias. En vez de mandarlas al grupo, guardalas acá con “+ Referencia”.</div>`}</div>`;
+}
+function openRef(id,link){
+  const isNew=!S.refs.find(r=>r.id===id);const r=S.refs.find(x=>x.id===id)||{id:uid(),link:link||"",tags:[],quien:(()=>{try{return localStorage.getItem("cos_quien")||""}catch(e){return ""}})()};
+  frm.innerHTML=`<div class="mh"><h2>${isNew?"Nueva referencia":"Referencia"}</h2></div><div class="mb">
+    <label class="full">Link del reel o post<input id="x_link" value="${esc(r.link)}" placeholder="https://www.instagram.com/reel/…"></label>
+    <label class="full">¿Por qué nos sirve?<input id="x_nota" value="${esc(r.nota)}" placeholder="Ej.: buen gancho en los primeros 2 segundos"></label>
+    <div class="full"><div class="eyebrow" style="margin-bottom:6px">Etiquetas</div><div class="filters" style="margin:0">${REF_TAGS.map(t=>`<button type="button" aria-pressed="${(r.tags||[]).includes(t)}" data-tg="${t}">${t}</button>`).join("")}</div></div>
+    <label>Pilar<select id="x_pilar"><option value="">—</option>${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${r.pilar===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
+    <label>Área<select id="x_area"><option value="">General</option>${Object.entries(AREAS).map(([k,v])=>`<option value="${k}" ${r.area===k?"selected":""}>${v.name}</option>`).join("")}</select></label>
+    <label class="full">Subida por<input id="x_quien" value="${esc(r.quien)}" placeholder="Tu nombre"></label>
+  </div><div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><button type="button" class="btn" data-toidea>Convertir en idea</button>`}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
+  const tags=new Set(r.tags||[]);
+  frm.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{const t=b.dataset.tg;tags.has(t)?tags.delete(t):tags.add(t);b.setAttribute("aria-pressed",tags.has(t))});
+  const read=()=>{const v=k=>frm.querySelector("#x_"+k).value.trim();try{localStorage.setItem("cos_quien",v("quien"))}catch(e){}return {...r,link:v("link"),nota:v("nota"),pilar:v("pilar"),area:v("area"),quien:v("quien"),tags:[...tags]}};
+  frm.onsubmit=e=>{e.preventDefault();const x=read();if(!x.link){toast("Pegá el link");return}save("refs",x);dlg.close();toast("Referencia guardada")};
+  const ti=frm.querySelector("[data-toidea]");if(ti)ti.onclick=()=>{const x=read();save("ideas",{id:"r"+x.id,title:x.nota||"Idea desde referencia",pilar:x.pilar||"valor",prioridad:"Media",gancho:"",descripcion:"Referencia: "+x.link,area:x.area||""});save("refs",{...x,usada:true});dlg.close();toast("Pasó al Banco de ideas")};
+  wireModal(()=>{remove("refs",r.id);toast("Referencia borrada")});
+  dlg.showModal();
+}
+function openUse(fid){
+  const f=S.drive.find(x=>x.id===fid);const from=ymd(new Date(Date.now()-14*864e5));
+  const list=S.posts.filter(p=>p.date>=from).sort((a,b)=>a.date>b.date?1:-1);
+  frm.innerHTML=`<div class="mh"><h2>¿En qué publicación se usa?</h2></div><div class="mb"><div class="full sub">${esc(f.nombre)}</div>
+  <div class="full" style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto">${list.map(p=>{const on=(p.driveIds||[]).includes(fid);return `<button type="button" class="item" data-up="${p.id}" style="text-align:left;font:inherit;color:inherit"><span class="when">${fmtDay(p.date)}</span><div class="txt"><div class="t">${on?"✓ ":""}${esc(p.title)}</div><div class="row">${pillOf(p.pilar)}<span class="chip">${esc(p.estado||"Idea")}</span></div></div></button>`}).join("")||`<div class="empty">No hay publicaciones de las últimas 2 semanas en adelante.</div>`}</div></div>
+  <div class="mf"><span class="sp"></span><button type="button" class="btn" data-close>Cerrar</button></div>`;
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();frm.onsubmit=e=>e.preventDefault();
+  frm.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{const p=S.posts.find(x=>x.id===b.dataset.up);const ids=new Set(p.driveIds||[]);ids.has(fid)?ids.delete(fid):ids.add(fid);save("posts",{...p,driveIds:[...ids]});dlg.close();toast(ids.has(fid)?"Vinculado a la publicación":"Desvinculado")});
+  dlg.showModal();
+}
+const REC_CATS=["Contactos de medios","Accesos y plataformas","Documentos y contratos","Proveedores","Marca y diseño","Otros"];
+function vRec(){
+  const q=recQ.toLowerCase();const list=S.recursos.filter(r=>!q||[r.titulo,r.detalle,r.cat,r.link].join(" ").toLowerCase().includes(q));
+  return `<div class="row"><h1>Recursos</h1><span class="sp"></span><input id="rec_q" placeholder="Buscar…" value="${esc(recQ)}" style="max-width:240px"><button class="btn pri" data-act="newrec">+ Recurso</button></div>
+  <p class="sub" style="margin:6px 0 0">Todo lo que hoy anda disperso: contactos de radios y diarios, tarifas, dónde están los accesos, contratos, proveedores. <b>No guardes contraseñas acá</b>: anotá dónde están o quién las tiene.</p>
+  ${REC_CATS.map(c=>{const it=list.filter(r=>(r.cat||"Otros")===c);return it.length?`<h2 style="margin:20px 0 8px">${c}</h2><div class="ideas" style="margin-top:0">${it.map(r=>`<div class="card idea" data-rec="${r.id}"><div class="hook">${esc(r.titulo)}</div>${r.detalle?`<div class="sub" style="white-space:pre-line">${esc(r.detalle)}</div>`:""}${r.link?`<a class="btn" style="align-self:flex-start" href="${esc(r.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Abrir ↗</a>`:""}</div>`).join("")}</div>`:""}).join("")||`<div class="empty" style="margin-top:16px">${recQ?"No se encontró nada.":"Empezá cargando los contactos de las radios y diarios, y dónde está cada acceso (Meta Business, Pilot, Redoo)."}</div>`}`;
+}
+function openRec(id){
+  const isNew=!S.recursos.find(r=>r.id===id);const r=S.recursos.find(x=>x.id===id)||{id:uid(),cat:"Contactos de medios"};
+  frm.innerHTML=`<div class="mh"><h2>${isNew?"Nuevo recurso":"Recurso"}</h2></div><div class="mb">
+    <label class="full">Título<input id="y_titulo" value="${esc(r.titulo)}" placeholder="Ej.: Radio FM Del Pueblo — tarifas 2026"></label>
+    <label class="full">Categoría<select id="y_cat">${opt(REC_CATS,r.cat)}</select></label>
+    <label class="full">Detalle<textarea id="y_detalle" style="min-height:120px" placeholder="Contacto, teléfono, precios, condiciones…">${esc(r.detalle)}</textarea></label>
+    <label class="full">Link (opcional)<input id="y_link" value="${esc(r.link)}" placeholder="https://…"></label>
+  </div><div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button>`}<span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
+  frm.onsubmit=e=>{e.preventDefault();const v=k=>frm.querySelector("#y_"+k).value.trim();if(!v("titulo"))return;
+    if(/contrase(ñ|n)a|password|clave:/i.test(v("detalle")))toast("Ojo: no conviene guardar contraseñas acá");
+    save("recursos",{...r,titulo:v("titulo"),cat:v("cat"),detalle:v("detalle"),link:v("link")});dlg.close();toast("Guardado")};
+  wireModal(()=>{remove("recursos",r.id);toast("Borrado")});
+  dlg.showModal();
+}
+function openShared(link){
+  frm.innerHTML=`<div class="mh"><h2>¿Qué es este link?</h2></div><div class="mb"><div class="full sub" style="overflow-wrap:anywhere">${esc(link)}</div></div>
+  <div class="mf"><button type="button" class="btn" data-sref>Es una referencia (de otra cuenta)</button><span class="sp"></span><button type="button" class="btn pri" data-spub>Lo publicamos nosotros</button></div>`;
+  frm.onsubmit=e=>e.preventDefault();
+  frm.querySelector("[data-sref]").onclick=()=>{dlg.close();openRef(null,link)};
+  frm.querySelector("[data-spub]").onclick=()=>{dlg.close();openReg(link)};
+  dlg.showModal();
+}
 function vGuia(){
   const go=(v,l)=>`<button class="btn" data-go="${v}">${l} →</button>`;
   const steps=[
@@ -527,13 +635,14 @@ function vGuia(){
    ["Durante la semana: mover las tarjetas","En <b>Producción</b> cada publicación avanza por columnas: Idea → Guion → Grabado → Editado → Publicado (o Multimedios si fue a radio o diario). Movela con la flecha → o arrastrándola. Lo que está en <b>Idea</b> es solo una propuesta: no cuenta como atrasado.",go("prod","Ir a Producción")],
    ["Cuando publicás algo: registrarlo","Tocá <b>✓ Registrar lo publicado</b>, pegá el link de Instagram y elegí si era algo planificado o nuevo. Reconoce solo si es reel, carrusel o historia. Las <b>placas</b> también se registran acá (formato Placa). En Android, desde Instagram: <b>Compartir → Marketing FS</b>. Si no se registra, no suma al objetivo.",go("hoy","Registrar")],
    ["Ideas que aparecen: al banco","Cualquier idea, en cualquier momento: <b>Banco de ideas → + Idea</b>, aunque sea solo el título. Después se pasa al calendario con un toque.",go("ideas","Ir al Banco")],
+   ["Biblioteca y Recursos","<b>Biblioteca → Material de Drive</b>: los videos y fotos de la carpeta de Drive aparecen solos; con “Usar en publicación” queda registrado qué material ya salió y filtrás lo que está <b>sin usar</b>. <b>Biblioteca → Referencias</b>: los reels de otras cuentas que les gustan (en vez del grupo de Instagram). <b>Recursos</b>: contactos de medios, tarifas, dónde están los accesos, contratos.",go("bib","Ir a Biblioteca")],
    ["Reuniones, eventos y recordatorios","<b>+ Tarea / reunión</b>. Podés ponerle varios días (ferias), que se repita (cada semana o mes) y aviso al celular. Aparecen en el Calendario y en el Inicio.",go("cal","Ir al Calendario")],
    ["Los avisos","<b>Google Calendar</b> (calendario “Marketing Ford Sevillano”): te suena antes de cada publicación y reunión. <b>Mails</b>: el viernes a las 17 llega el resumen de la semana (qué se cumplió y qué falta) y el día 1 el del mes. Los mails se configuran en <b>Marca</b>.",go("marca","Ir a Marca")],
    ["En el celular","Abrí la página y en el menú del navegador elegí <b>Agregar a pantalla de inicio</b> (iPhone: Safari → Compartir). La primera vez tocá arriba a la derecha y pegá la URL de sincronización que te pasa Franco.",""],
    ["Arriba a la derecha tiene que decir “Sincronizado”","Con el punto verde, lo que hacés lo ve todo el equipo. Si dice “Sin conexión”, revisá internet o volvé a pegar la URL de sincronización.",""]
   ];
   return `<div class="row"><h1>Cómo usar el Content OS</h1><span class="sp"></span><button class="btn" data-act="welcome">Ver introducción</button></div>
-  <p class="sub" style="margin:6px 0 0">Diez pasos para arrancar. Volvé acá cuando quieras: pestaña <b>Guía</b>.</p>
+  <p class="sub" style="margin:6px 0 0">Once pasos para arrancar. Volvé acá cuando quieras: pestaña <b>Guía</b>.</p>
   <ol class="guide">${steps.map(([t,d,b])=>`<li class="card"><h2>${t}</h2><p>${d}</p>${b}</li>`).join("")}</ol>
   <div class="card" style="margin-top:14px"><h2>La rutina en una línea</h2><p style="margin:6px 0 0"><b>Lunes</b> armo la semana · <b>martes y jueves</b> grabo y edito · <b>lunes, miércoles y viernes</b> publico y registro · <b>viernes</b> leo el resumen.</p></div>`;
 }
@@ -573,6 +682,7 @@ function vMarca(){
       <label style="max-width:200px">Mínimo de reels o carruseles<input type="number" min="0" max="30" id="m_goalFeed" data-gk="goalFeed" value="${esc(b.goalFeed??2)}"></label>
       <label style="max-width:200px">Placas por semana (0 = solo contar)<input type="number" min="0" max="50" id="m_goalPlaca" data-gk="goalPlaca" value="${esc(b.goalPlaca??0)}"></label></div>
     <p class="sub" style="margin:6px 0 0;font-size:12px">Además se controla que haya al menos una de cada pilar: valor, experiencia y producto.</p>
+    <label style="margin-top:12px">Carpeta de Drive para la Biblioteca (link)<input id="m_drive" value="${esc(b.driveFolder||"")}" placeholder="https://drive.google.com/drive/folders/…"></label>
     <div style="overflow-x:auto"><table class="mtable"><thead><tr><th>Mail</th><th class="c">Diario</th><th class="c">Semanal</th><th class="c">Mensual</th><th></th></tr></thead><tbody>
     ${(b.mails||[]).map((m,i)=>`<tr><td><input type="email" id="m_mail_${i}" data-mi="${i}" data-mf="email" value="${esc(m.email)}" placeholder="nombre@gmail.com"></td>
       ${["diario","semanal","mensual"].map(k=>`<td class="c"><input type="checkbox" id="m_${k}_${i}" data-mi="${i}" data-mf="${k}" ${m[k]?"checked":""} aria-label="${k}"></td>`).join("")}
@@ -738,7 +848,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -748,6 +858,15 @@ function bind(){
     if(d.pick)return pickIdea(d.pick,d.pk);
     if(d.newpost)return openPost(null,d.newpost);
     if(d.act==="reg")return openReg("");
+    if(d.act==="newref")return openRef(null,"");
+    if(d.act==="newrec")return openRec(null);
+    if(d.ref)return openRef(d.ref);
+    if(d.rec)return openRec(d.rec);
+    if(d.use)return openUse(d.use);
+    if(d.bt){bibTab=d.bt;render();return}
+    if(d.rt!==undefined){rTag=d.rt;render();return}
+    if(d.dm){dModel=dModel===d.dm?"":d.dm;render();return}
+    if(d.dun!==undefined){dUnused=!dUnused;render();return}
     if(d.act==="welcome")return openWelcome();
     if(d.go){view=d.go;render();scrollTo(0,0);return}
     if(d.act==="cleanup")return cleanup();
@@ -767,6 +886,11 @@ function bind(){
   m.onkeydown=e=>{if(e.key==="Enter"&&e.target.matches(".slot")){e.target.click()}};
   m.querySelectorAll("[data-mf]").forEach(el=>el.onchange=()=>{const b=structuredClone(brand());const i=Number(el.dataset.mi);const f=el.dataset.mf;
     if(f==="email"){const v=el.value.trim();if(v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){toast("Revisá el mail: "+v);return}b.mails[i].email=v}else b.mails[i][f]=el.checked;saveBrand(b)});
+  const md=m.querySelector("#m_drive");if(md)md.onchange=()=>{const b=structuredClone(brand());b.driveFolder=md.value.trim();saveBrand(b);toast("Guardado. La Biblioteca se llena en la próxima actualización (cada hora).")};
+  const dqI=m.querySelector("#d_q");if(dqI)dqI.oninput=()=>{dq=dqI.value;clearTimeout(dqI._t);dqI._t=setTimeout(()=>{render();const n=document.getElementById("d_q");n.focus();n.setSelectionRange(dq.length,dq.length)},300)};
+  const dfI=m.querySelector("#d_folder");if(dfI)dfI.onchange=()=>{dFolder=dfI.value;render()};
+  const dtI=m.querySelector("#d_type");if(dtI)dtI.onchange=()=>{dType=dtI.value;render()};
+  const rqI=m.querySelector("#rec_q");if(rqI)rqI.oninput=()=>{recQ=rqI.value;clearTimeout(rqI._t);rqI._t=setTimeout(()=>{render();const n=document.getElementById("rec_q");n.focus();n.setSelectionRange(recQ.length,recQ.length)},300)};
   m.querySelectorAll("[data-gk]").forEach(el=>el.onchange=()=>{const b=structuredClone(brand());b[el.dataset.gk]=Math.max(el.dataset.gk==="goal"?1:0,Number(el.value)||0);saveBrand(b)});
   m.querySelectorAll("[contenteditable]").forEach(el=>{
     el.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();el.blur()}};
@@ -789,7 +913,7 @@ try{const v=localStorage.getItem("cos_view");if(v)view=v}catch(_){}
 document.getElementById("syncBtn").onclick=openSync;
 setTimeout(()=>{try{if(!localStorage.getItem("cos_welcome")&&!location.search)openWelcome()}catch(e){}},900);
 (()=>{try{const q=new URLSearchParams(location.search);const sh=q.get("url")||q.get("text")||"";const m=sh.match(/https?:\/\/\S+/);
-  if(q.has("share")||m){history.replaceState(null,"",location.pathname);setTimeout(()=>{view="hoy";render();openReg(m?m[0]:sh)},400)}}catch(e){}})();
+  if(q.has("share")||m){history.replaceState(null,"",location.pathname);setTimeout(()=>{view="hoy";render();(m||sh)&&!q.has("share")?openShared(m?m[0]:sh):openReg(m?m[0]:sh)},400)}}catch(e){}})();
 init();
 </script>
 </body>
