@@ -395,23 +395,26 @@ function render(){
 function vHoy(){
   const t=todayS(), wd=weekDates();
   const slots=wd.map((d,i)=>{const pk=["valor","exp","prod"][i];const ps=S.posts.filter(p=>p.date===d);
-    return `<div class="slot ${pk}" data-newpost="${d}" tabindex="0">
+    return `<div class="slot ${pk}">
       <div class="row"><span class="day">${["Lunes","Miércoles","Viernes"][i]}</span><span class="sp"></span><span class="eyebrow">${fmtDay(d)}</span></div>
       ${pillOf(pk)}
-      ${ps.length?ps.map(p=>`<div data-post="${p.id}"><div class="t">${esc(p.title)}</div><div class="row" style="margin-top:4px">${areaB(p.area)}<span class="chip">${esc(p.estado||"Idea")}</span><span class="chip">${esc(p.formato||"")}</span></div></div>`).join(""):`<div class="empty">Sin publicación. Tocá para planificarla.</div>`}
+      ${ps.length?ps.map(p=>`<div data-post="${p.id}" style="cursor:pointer;${(p.estado||"Idea")==="Idea"?"opacity:.6":""}"><div class="t">${esc(p.title)}</div><div class="row" style="margin-top:4px">${areaB(p.area)}<span class="chip">${esc(p.estado||"Idea")}</span><span class="chip">${esc(p.formato||"")}</span></div></div>`).join(""):`<div class="empty">Sin publicación todavía.</div>`}
+      <div class="row" style="gap:6px;margin-top:auto"><button class="btn" data-pick="${d}" data-pk="${pk}">Del banco</button><button class="btn ghost" data-newpost="${d}">+ Nueva</button></div>
     </div>`}).join("");
   const pend=S.tasks.filter(x=>!x.done).sort((a,b)=>(a.date||"9")+(a.time||"")>(b.date||"9")+(b.time||"")?1:-1);
   const hoyT=S.tasks.filter(x=>(x.repeat||x.dateEnd)?occ(x,t):(!x.done&&x.date&&x.date<=t));
   const prox=pend.filter(x=>!hoyT.includes(x)&&(!x.date||x.date>t||x.repeat)).slice(0,8);
-  const atras=S.posts.filter(p=>p.date<t&&!["Publicado","Multimedios"].includes(p.estado));
+  const atras=S.posts.filter(p=>p.date<t&&["Guion","Grabado","Editado"].includes(p.estado));
+  const sinAprobar=S.posts.filter(p=>p.date<t&&(p.estado||"Idea")==="Idea").length;
   const mes=new Date().getMonth();const pubMes=S.posts.filter(p=>(p.estado==="Publicado"||p.estado==="Multimedios")&&parse(p.date).getMonth()===mes).length;
   const enProd=S.posts.filter(p=>!["Publicado","Multimedios","Idea"].includes(p.estado)).length;
   return `
   <div class="row"><div><div class="eyebrow">${DIAS[new Date().getDay()]} ${new Date().getDate()} de ${MESES[new Date().getMonth()]}</div><h1>Esta semana en redes</h1></div><span class="sp"></span>
-  <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn pri" data-act="newpost">+ Publicación</button></div>
+  <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn" data-act="newpost">+ Planificar</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
+  ${sinAprobar?`<div class="card row" style="margin-top:14px;border-color:var(--prod)"><span>Hay <b>${sinAprobar}</b> publicaciones con fecha pasada que nunca pasaron de <b>Idea</b>. No cuentan como atrasadas.</span><span class="sp"></span><button class="btn" data-act="cleanup">Devolverlas al banco de ideas</button></div>`:""}
   ${(()=>{const g=Number(brand().goal)||3;const wk=weekDates();const mon=wk[0];const sun=ymd(new Date(parse(mon).getTime()+6*864e5));
     const ws=S.posts.filter(p=>p.date>=mon&&p.date<=sun);const done=ws.filter(p=>["Publicado","Multimedios"].includes(p.estado)).length;
-    const dueBy=ws.filter(p=>p.date<=t).length;const late=ws.filter(p=>p.date<t&&!["Publicado","Multimedios"].includes(p.estado)).length;
+    const dueBy=ws.filter(p=>p.date<=t).length;const late=ws.filter(p=>p.date<t&&["Guion","Grabado","Editado"].includes(p.estado)).length;
     const st=done>=g?"ok":late?"bad":"mid";const pct=Math.min(100,Math.round(done/g*100));
     return `<div class="goal goal-${st}"><div class="row"><span class="eyebrow">Objetivo semanal</span><span class="sp"></span><b class="gnum">${done} de ${g} publicadas</b></div>
     <div class="gbar"><span style="width:${pct}%"></span></div>
@@ -497,7 +500,7 @@ function vProd(){
         <div class="row">${areaB(p.area)}${pillOf(p.pilar)}${p.auto?`<span class="chip">${esc(p.auto)}</span>`:""}</div>
         <div class="mv">${k>0?`<button data-move="${p.id}" data-to="${ESTADOS[k-1]}" aria-label="Mover atrás">←</button>`:""}${k<ESTADOS.length-1?`<button data-move="${p.id}" data-to="${ESTADOS[k+1]}" aria-label="Mover adelante">→</button>`:""}</div></div>`}).join("")||`<div class="empty">Arrastrá tarjetas acá</div>`}
     </div>`}).join("");
-  return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn pri" data-act="newpost">+ Publicación</button></div>
+  return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn" data-act="cleanup">Devolver ideas sin aprobar al banco</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
   <p class="sub" style="margin:6px 0 0">Arrastrá cada publicación a la columna de su estado, o usá las flechas.</p><div class="board">${cols}</div>`;
 }
 function vIdeas(){
@@ -568,9 +571,10 @@ function openPost(id,date,from){
     <label class="full">Guion<textarea id="f_guion" style="min-height:140px">${esc(p.guion)}</textarea></label>
     <label class="full">Link publicado<input id="f_link" value="${esc(p.link)}" placeholder="https://instagram.com/…"></label>
   </div>
-  <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><a class="btn" target="_blank" rel="noopener" href="${gcal("📲 "+(p.title||""),p.date,p.time,(p.gancho||"")+"\n\n"+(p.guion||""))}">Agregar a Google Calendar</a>`}
+  <div class="mf">${isNew?"":`<button type="button" class="btn danger" data-del>Borrar</button><button type="button" class="btn" data-tobank>Devolver al banco</button><a class="btn" target="_blank" rel="noopener" href="${gcal("📲 "+(p.title||""),p.date,p.time,(p.gancho||"")+"\n\n"+(p.guion||""))}">Agregar a Google Calendar</a>`}
     <span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri" value="ok">Guardar</button></div>`;
   frm.querySelector("#f_pilar").onchange=e=>frm.querySelector("#f_sub").innerHTML=subsOpts(e.target.value,"");
+  const tb=frm.querySelector("[data-tobank]");if(tb)tb.onclick=()=>{toBank(p);dlg.close();toast("Volvió al banco de ideas")};
   frm.querySelector("#f_date").onchange=e=>{const k=pillarForDate(e.target.value);if(k){frm.querySelector("#f_pilar").value=k;frm.querySelector("#f_sub").innerHTML=subsOpts(k,"")}};
   frm.onsubmit=e=>{e.preventDefault();const v=k=>frm.querySelector("#f_"+k).value.trim();
     if(!v("title")){frm.querySelector("#f_title").focus();return}
@@ -625,6 +629,63 @@ function openIdea(id){
   wireModal(()=>{remove("ideas",x.id);toast("Idea borrada")});
   dlg.showModal();
 }
+function toBank(p){
+  const idea={id:"b"+p.id,title:p.title,pilar:p.pilar||"valor",sub:p.sub||"",prioridad:"Media",gancho:p.gancho||"",descripcion:p.descripcion||"",guion:p.guion||"",area:p.area||""};
+  save("ideas",idea);remove("posts",p.id);
+}
+function cleanup(){
+  const list=S.posts.filter(p=>(p.estado||"Idea")==="Idea"&&p.date<todayS());
+  if(!list.length){toast("No hay ideas sin aprobar con fecha pasada");return}
+  frm.innerHTML=`<div class="mh"><h2>Devolver al banco de ideas</h2></div><div class="mb"><div class="full">Estas ${list.length} publicaciones quedaron en <b>Idea</b> con fecha pasada. Vuelven al Banco de ideas (no se borra nada):
+  <ul style="margin:8px 0 0;padding-left:18px">${list.map(p=>`<li>${fmtDay(p.date)} · ${esc(p.title)}</li>`).join("")}</ul>
+  <label style="flex-direction:row;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" id="c_future" style="width:auto"> Incluir también las futuras que siguen en Idea (${S.posts.filter(p=>(p.estado||"Idea")==="Idea"&&p.date>=todayS()).length})</label></div></div>
+  <div class="mf"><span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Devolver al banco</button></div>`;
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();
+  frm.onsubmit=async e=>{e.preventDefault();const all=frm.querySelector("#c_future").checked;dlg.close();
+    const l=S.posts.filter(p=>(p.estado||"Idea")==="Idea"&&(all||p.date<todayS()));for(const p of l){await toBank(p)}toast(l.length+" volvieron al banco de ideas")};
+  dlg.showModal();
+}
+function pickIdea(date,pk){
+  const list=S.ideas.filter(i=>i.pilar===pk).sort((a,b)=>(a.prioridad==="Alta"?0:1)-(b.prioridad==="Alta"?0:1));
+  frm.innerHTML=`<div class="mh"><h2>Elegí una idea · ${PIL[pk].short} · ${fmtDay(date)}</h2></div>
+  <div class="mb"><div class="full" style="display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow:auto">
+  ${list.length?list.map(i=>`<button type="button" class="item" data-pi="${i.id}" style="text-align:left;font:inherit;color:inherit"><div class="txt"><div class="t">${esc(i.gancho||i.title)}</div><div class="sub" style="font-size:12px">${esc(i.title)}${i.sub?" · "+esc(i.sub):""}</div></div></button>`).join(""):`<div class="empty">No hay ideas de ${PIL[pk].short} en el banco. Creá una nueva.</div>`}
+  </div></div><div class="mf"><span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button type="button" class="btn pri" data-newp>+ Crear una nueva</button></div>`;
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();
+  frm.querySelector("[data-newp]").onclick=()=>{dlg.close();openPost(null,date)};
+  frm.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{const i=S.ideas.find(x=>x.id===b.dataset.pi);dlg.close();openPost(null,date,i)});
+  dlg.onsubmit=null;frm.onsubmit=e=>e.preventDefault();
+  dlg.showModal();
+}
+function openReg(link){
+  const t=todayS();const mon=weekDates()[0];
+  const cand=S.posts.filter(p=>p.date>=ymd(new Date(parse(mon).getTime()-7*864e5))&&!["Publicado","Multimedios"].includes(p.estado)).sort((a,b)=>a.date>b.date?1:-1);
+  const net=l=>/tiktok/i.test(l)?"TikTok":/facebook|fb\./i.test(l)?"Facebook":"Instagram";
+  const fmtL=l=>/\/reel\//i.test(l)?"Reel":/\/stories\//i.test(l)?"Historia":/\/p\//i.test(l)?"Carrusel":"Reel";
+  frm.innerHTML=`<div class="mh"><h2>Registrar lo publicado</h2></div>
+  <div class="mb">
+    <label class="full">Link de la publicación (opcional)<input id="r_link" value="${esc(link||"")}" placeholder="Pegá el link de Instagram"></label>
+    <label class="full">¿Era algo planificado?<select id="r_plan"><option value="">No, es algo nuevo</option>${cand.map(p=>`<option value="${p.id}">${fmtDay(p.date)} · ${esc(p.title)} (${esc(p.estado||"Idea")})</option>`).join("")}</select></label>
+    <div class="full" id="r_new" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <label style="grid-column:1/-1">Título<input id="r_title" placeholder="Ej.: Historia Ranger en la feria"></label>
+      <label>Formato<select id="r_formato">${opt(FORMATOS,fmtL(link||""))}</select></label>
+      <label>Pilar<select id="r_pilar">${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${pillarForDate(t)===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
+      <label>Área<select id="r_area"><option value="">General</option>${Object.entries(AREAS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("")}</select></label>
+      <label>Fecha<input type="date" id="r_date" value="${t}"></label>
+    </div>
+  </div>
+  <div class="mf"><span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">✓ Registrar</button></div>`;
+  const pl=frm.querySelector("#r_plan"),nw=frm.querySelector("#r_new");
+  pl.onchange=()=>{nw.hidden=!!pl.value};
+  frm.querySelector("#r_link").oninput=e=>{frm.querySelector("#r_formato").value=fmtL(e.target.value)};
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();
+  frm.onsubmit=e=>{e.preventDefault();const v=k=>frm.querySelector("#r_"+k).value.trim();const l=v("link");
+    if(v("plan")){const p=S.posts.find(x=>x.id===v("plan"));save("posts",{...p,estado:"Publicado",link:l||p.link||"",red:l?net(l):p.red,date:p.date>t?t:p.date})}
+    else{if(!v("title")&&!l){frm.querySelector("#r_title").focus();toast("Poné un título o el link");return}
+      save("posts",{id:uid(),title:v("title")||(v("formato")+" "+fmtDay(v("date"))),date:v("date")||t,formato:v("formato"),pilar:v("pilar"),area:v("area"),red:l?net(l):"Instagram",estado:"Publicado",link:l})}
+    dlg.close();toast("¡Registrado! Suma al objetivo semanal")};
+  dlg.showModal();
+}
 function wireModal(onDel){
   frm.querySelector("[data-close]").onclick=()=>dlg.close();
   const d=frm.querySelector("[data-del]");
@@ -635,14 +696,17 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-newpost],[data-act],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
     if(d.post)return openPost(d.post);
     if(d.task)return openTask(d.task);
     if(d.idea)return openIdea(d.idea);
+    if(d.pick)return pickIdea(d.pick,d.pk);
     if(d.newpost)return openPost(null,d.newpost);
+    if(d.act==="reg")return openReg("");
+    if(d.act==="cleanup")return cleanup();
     if(d.act==="newpost")return openPost(null,null);
     if(d.act==="newtask")return openTask(null);
     if(d.act==="newidea")return openIdea(null);
@@ -679,6 +743,8 @@ function bind(){
 document.getElementById("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;view=b.dataset.v;render();try{localStorage.setItem("cos_view",view)}catch(_){}};
 try{const v=localStorage.getItem("cos_view");if(v)view=v}catch(_){}
 document.getElementById("syncBtn").onclick=openSync;
+(()=>{try{const q=new URLSearchParams(location.search);const sh=q.get("url")||q.get("text")||"";const m=sh.match(/https?:\/\/\S+/);
+  if(q.has("share")||m){history.replaceState(null,"",location.pathname);setTimeout(()=>{view="hoy";render();openReg(m?m[0]:sh)},400)}}catch(e){}})();
 init();
 </script>
 </body>

@@ -24,5 +24,26 @@
    "type": "image/png",
    "purpose": "maskable"
   }
+ ],
+ "share_target": {
+  "action": "./",
+  "method": "GET",
+  "params": {
+   "title": "title",
+   "text": "text",
+   "url": "url"
+  }
+ },
+ "shortcuts": [
+  {
+   "name": "Registrar lo publicado",
+   "url": "./?share=1",
+   "icons": [
+    {
+     "src": "icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  }
  ]
 }

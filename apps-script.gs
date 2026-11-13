@@ -271,7 +271,7 @@ function buildDiario_() {
   const c = cfg_(); const { data, goal } = c; const today = new Date(); const t = fmt_(today); const ayer = fmt_(add_(today, -1));
   const mon = fmt_(monday_(today)), sun = fmt_(add_(monday_(today), 6));
   const hoyP = data.posts.filter(p => p.date === t);
-  const atras = data.posts.filter(p => p.date < t && p.date >= fmt_(add_(today, -14)) && DONE.indexOf(p.estado) < 0);
+  const atras = data.posts.filter(p => p.date < t && p.date >= fmt_(add_(today, -14)) && ['Guion', 'Grabado', 'Editado'].indexOf(p.estado) >= 0);
   const hoyT = data.tasks.filter(x => occurs_(x, t) && !(x.done && !x.repeat)).sort((a, b) => (a.time || '') > (b.time || '') ? 1 : -1);
   const week = data.posts.filter(p => p.date >= mon && p.date <= sun); const done = week.filter(p => DONE.indexOf(p.estado) >= 0).length;
   let h = '';
@@ -288,7 +288,7 @@ function testDiario() { const r = buildDiario_(); send_('diario', '[Prueba] ' + 
 function resumen_(from, to, goalTotal, weekly) {
   const c = cfg_(); const { data } = c;
   const ps = data.posts.filter(p => p.date >= from && p.date <= to);
-  const done = ps.filter(p => DONE.indexOf(p.estado) >= 0); const pend = ps.filter(p => DONE.indexOf(p.estado) < 0);
+  const done = ps.filter(p => DONE.indexOf(p.estado) >= 0); const pend = ps.filter(p => ['Guion', 'Grabado', 'Editado'].indexOf(p.estado) >= 0);
   const cnt = (arr, key, names) => Object.keys(names).map(k => names[k] + ': <b>' + arr.filter(p => p[key] === k).length + '</b>').join(' · ') + ' · Sin asignar: <b>' + arr.filter(p => !names[p[key]]).length + '</b>';
   let h = '<h3>🎯 ' + done.length + ' de ' + goalTotal + ' publicaciones (' + Math.round(done.length / goalTotal * 100) + '%)</h3>' + bar_(done.length, goalTotal);
   if (weekly) h += checks_(done, c);
