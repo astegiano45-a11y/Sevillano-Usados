@@ -644,23 +644,28 @@ function vIdeas(){
   <div class="ideas">${list.length?list.map(i=>`<div class="card idea" data-idea="${i.id}"><div class="row">${pillOf(i.pilar)}${areaB(i.area)}${i.sub?`<span class="chip">${esc(i.sub)}</span>`:""}<span class="sp"></span><span class="prio ${(i.prioridad||"").toLowerCase()}">${esc(i.prioridad||"")}</span></div>
     <div class="hook">${esc(i.gancho||i.title)}</div><div class="sub">${esc(i.title)}</div>${i.guion?`<span class="chip" style="align-self:flex-start">Con guion</span>`:""}</div>`).join(""):`<div class="empty" style="grid-column:1/-1">Guardá acá cada idea que se te ocurra. Después la pasás al calendario con un toque.</div>`}</div>`;
 }
-let bibTab="drive",dq="",dFolder="",dType="",dModel="",dUnused=false,rTag="",recQ="";
+let dSub="";let bibTab="drive",dq="",dFolder="",dType="",dModel="",dUnused=false,rTag="",recQ="";
 const MODELOS=["Ranger","Everest","Territory","Bronco","Maverick","Kuga","EcoSport","Focus","Ka","Transit","F-150","Mustang","Raptor"];
 const usedIn=id=>S.posts.filter(p=>(p.driveIds||[]).includes(id));
 function vBib(){
   const seg=`<div class="seg"><button aria-pressed="${bibTab==="drive"}" data-bt="drive">Material de Drive</button><button aria-pressed="${bibTab==="refs"}" data-bt="refs">Referencias</button></div>`;
   if(bibTab==="refs")return vRefs(seg);
-  const meta=S.driveMeta;S.drive.forEach(f=>{if(f&&f.carpeta)f.carpeta=String(f.carpeta).trim()});const folders=[...new Set(S.drive.map(f=>f.carpeta))].sort();
-  if(dFolder&&!folders.includes(dFolder))dFolder="";
+  const meta=S.driveMeta;S.drive.forEach(f=>{if(f&&f.carpeta)f.carpeta=String(f.carpeta).trim()});const rel=f=>String(f.carpeta||"").split(" / ").slice(1);
+  const tops=[...new Set(S.drive.map(f=>rel(f)[0]||"(raíz)"))].sort();
+  if(dFolder&&!tops.includes(dFolder)){dFolder="";dSub=""}
+  const subs=dFolder?[...new Set(S.drive.filter(f=>(rel(f)[0]||"(raíz)")===dFolder).map(f=>rel(f).slice(1).join(" / ")).filter(Boolean))].sort():[];
+  if(dSub&&!subs.some(x=>x===dSub||x.startsWith(dSub+" / ")))dSub="";
+  const inFolder=f=>{const r=rel(f);if(dFolder&&(r[0]||"(raíz)")!==dFolder)return false;if(dSub){const rest=r.slice(1).join(" / ");return rest===dSub||rest.startsWith(dSub+" / ")}return true};
   const active=!!(dq||dFolder||dType||dModel||dUnused);
-  const list=S.drive.filter(f=>(!dFolder||f.carpeta===dFolder)&&(!dType||f.tipo===dType)&&(!dModel||f.modelo===dModel)&&(!dUnused||!usedIn(f.id).length)&&(!dq||(f.nombre+" "+f.carpeta).toLowerCase().includes(dq.toLowerCase())))
+  const list=S.drive.filter(f=>inFolder(f)&&(!dType||f.tipo===dType)&&(!dModel||f.modelo===dModel)&&(!dUnused||!usedIn(f.id).length)&&(!dq||(f.nombre+" "+f.carpeta).toLowerCase().includes(dq.toLowerCase())))
     .sort((a,b)=>(b.fecha||"")>(a.fecha||"")?1:-1);
   const models=MODELOS.filter(m=>S.drive.some(f=>f.modelo===m));
   return `<div class="row"><h1>Biblioteca</h1><span class="sp"></span>${seg}</div>
   <p class="sub" style="margin:6px 0 0">${meta?`${meta.root?`Carpeta <b>${esc(meta.root)}</b> · `:""}${S.drive.length} archivos${meta.porCarpeta?` (${Object.entries(meta.porCarpeta).map(([k,v])=>`${esc(k)}: ${v}`).join(" · ")})`:""} · actualizada ${new Date(meta.at).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short"})} · se actualiza sola cada hora`:`Todavía no se leyó la carpeta de Drive. Cargá el link de la carpeta en <b>Marca</b> y ejecutá <b>setupAvisos</b> en Apps Script.`}</p>
+  <div class="filters" style="align-items:center"><span class="lbl">Carpeta</span><button aria-pressed="${!dFolder}" data-dtop="">Todas</button>${tops.map(t=>`<button aria-pressed="${dFolder===t}" data-dtop="${esc(t)}">${esc(t)} <span class="sub" style="font-size:11px">${S.drive.filter(f=>(rel(f)[0]||"(raíz)")===t).length}</span></button>`).join("")}</div>
+  ${subs.length?`<div class="filters" style="align-items:center"><span class="lbl">Dentro de ${esc(dFolder)}</span><select id="d_sub" style="max-width:340px"><option value="">Todo ${esc(dFolder)}</option>${[...new Set(subs.map(x=>x.split(" / ")[0]))].map(x=>`<option ${dSub===x?"selected":""}>${esc(x)}</option>`).join("")}${subs.filter(x=>x.includes(" / ")).map(x=>`<option ${dSub===x?"selected":""} value="${esc(x)}">— ${esc(x)}</option>`).join("")}</select></div>`:""}
   <div class="filters" style="align-items:center">
     <input id="d_q" placeholder="Buscar por nombre…" value="${esc(dq)}" style="max-width:220px">
-    <select id="d_folder" style="max-width:220px"><option value="">Todas las carpetas</option>${folders.map(f=>`<option ${f===dFolder?"selected":""}>${esc(f)}</option>`).join("")}</select>
     <select id="d_type" style="max-width:140px"><option value="">Videos e imágenes</option><option ${dType==="Video"?"selected":""}>Video</option><option ${dType==="Imagen"?"selected":""}>Imagen</option></select>
     <button aria-pressed="${dUnused}" data-dun>Sin usar</button>
     ${active?`<button data-dclear style="color:var(--warn)">✕ Limpiar filtros</button>`:""}
@@ -670,7 +675,7 @@ function vBib(){
   <div class="dgrid">${list.slice(0,300).map(f=>{const u=usedIn(f.id);return `<div class="dcard">
     <a class="dthumb" href="https://drive.google.com/file/d/${f.id}/view" target="_blank" rel="noopener"><img loading="lazy" alt="" src="https://drive.google.com/thumbnail?id=${f.id}&sz=w400" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'dph',textContent:'${f.tipo==="Video"?"▶":"🖼"}'}))"><span class="dtype">${f.tipo==="Video"?"▶ Video":"Imagen"}</span></a>
     <div class="dname" title="${esc(f.nombre)}">${esc(f.nombre)}</div>
-    <div class="dmeta">${esc(f.carpeta)}${f.fecha?" · "+fmtDay(f.fecha):""}</div>
+    <div class="dmeta">${esc(rel(f).join(" / ")||f.carpeta)}${f.fecha?" · "+fmtDay(f.fecha):""}</div>
     ${u.length?`<span class="chip" style="align-self:flex-start;color:var(--ok)">✓ Usado: ${esc(u[0].title)}${u.length>1?" +"+(u.length-1):""}</span>`:`<span class="chip" style="align-self:flex-start">Sin usar</span>`}
     <button class="btn" data-use="${f.id}">Usar en publicación</button></div>`}).join("")||`<div class="empty" style="grid-column:1/-1">${S.drive.length?`Ningún archivo coincide con los filtros. <button class="linkb" data-dclear>Limpiar filtros</button>`:"Acá van a aparecer solos los videos e imágenes de la carpeta de Drive."}</div>`}</div>
   ${list.length>300?`<p class="sub">Se muestran 300 de ${list.length}. Usá los filtros para encontrar el resto.</p>`:""}`;
@@ -1112,7 +1117,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-regp],[data-tocounter],[data-cplus],[data-cminus],[data-cday],[data-help],[data-hex],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-dclear],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-ideaa],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-regp],[data-tocounter],[data-cplus],[data-cminus],[data-cday],[data-help],[data-hex],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-dclear],[data-dtop],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-ideaa],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -1137,7 +1142,8 @@ function bind(){
     if(d.rt!==undefined){rTag=d.rt;render();return}
     if(d.dm){dModel=dModel===d.dm?"":d.dm;render();return}
     if(d.dun!==undefined){dUnused=!dUnused;render();return}
-    if(d.dclear!==undefined){dq="";dFolder="";dType="";dModel="";dUnused=false;render();return}
+    if(d.dtop!==undefined){dFolder=d.dtop;dSub="";render();return}
+    if(d.dclear!==undefined){dSub="";dq="";dFolder="";dType="";dModel="";dUnused=false;render();return}
     if(d.act==="welcome")return openWelcome();
     if(d.hex){const h=d.hex;(navigator.clipboard?navigator.clipboard.writeText(h):Promise.reject()).then(()=>toast("Copiado "+h)).catch(()=>toast(h));return}
     if(d.help!==undefined){helpOpen=!helpOpen;render();return}
@@ -1165,7 +1171,7 @@ function bind(){
     if(f==="email"){const v=el.value.trim();if(v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){toast("Revisá el mail: "+v);return}b.mails[i].email=v}else b.mails[i][f]=el.checked;saveBrand(b)});
   const md=m.querySelector("#m_drive");if(md)md.onchange=()=>{const b=structuredClone(brand());b.driveFolder=md.value.trim();saveBrand(b);toast("Guardado. La Biblioteca se llena en la próxima actualización (cada hora).")};
   const dqI=m.querySelector("#d_q");if(dqI)dqI.oninput=()=>{dq=dqI.value;clearTimeout(dqI._t);dqI._t=setTimeout(()=>{render();const n=document.getElementById("d_q");n.focus();n.setSelectionRange(dq.length,dq.length)},300)};
-  const dfI=m.querySelector("#d_folder");if(dfI)dfI.onchange=()=>{dFolder=dfI.value;render()};
+  const dsI=m.querySelector("#d_sub");if(dsI)dsI.onchange=()=>{dSub=dsI.value;render()};
   const dtI=m.querySelector("#d_type");if(dtI)dtI.onchange=()=>{dType=dtI.value;render()};
   const rqI=m.querySelector("#rec_q");if(rqI)rqI.oninput=()=>{recQ=rqI.value;clearTimeout(rqI._t);rqI._t=setTimeout(()=>{render();const n=document.getElementById("rec_q");n.focus();n.setSelectionRange(recQ.length,recQ.length)},300)};
   m.querySelectorAll("[data-gk]").forEach(el=>el.onchange=()=>{const b=structuredClone(brand());b[el.dataset.gk]=Math.max(el.dataset.gk==="goal"?1:0,Number(el.value)||0);saveBrand(b)});
