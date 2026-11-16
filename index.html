@@ -243,6 +243,10 @@ h2{font-size:18px;font-weight:700}
 .gl{font-size:13px;font-weight:600}.gv{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
 .grow .gchecks{grid-column:2/4}
 @media(max-width:620px){.grow{grid-template-columns:1fr auto}.grow .gbar{grid-column:1/3;grid-row:2}.grow .gchecks{grid-column:1/3}}
+.gdot{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-right:8px;font-size:11px;font-weight:900;vertical-align:-3px;color:#fff}
+.gdot.on{background:var(--ok);border-color:var(--ok)}
+.gcb{cursor:pointer;background:var(--surface);color:var(--accent);border:1px dashed var(--accent);font:600 12px var(--f-body)}
+.gcb:hover{background:var(--accent-soft)}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -533,12 +537,12 @@ function vHoy(){
     const ws=S.posts.filter(p=>p.date>=mon&&p.date<=sun);const D=ws.filter(isDone);
     const tot=sumQ(D.filter(isFeed)),h=sumQ(D.filter(p=>p.formato==="Historia")),f=sumQ(D.filter(p=>p.formato==="Reel"||p.formato==="Carrusel")),pl=sumQ(D.filter(p=>p.formato==="Placa"));
     const late=ws.filter(p=>p.date<t&&["Guion","Grabado","Editado"].includes(p.estado)).length;
-    const row=(lbl,n,goal)=>{const ok=goal?n>=goal:n>0;const pct=goal?Math.min(100,Math.round(n/goal*100)):(n?100:0);return `<div class="grow"><span class="gl">${ok?"✅":"⬜"} ${lbl}</span><span class="gbar"><span style="width:${pct}%;${ok?"background:var(--ok)":""}"></span></span><b class="gv">${n}${goal?` de ${goal}`:""}</b></div>`};
+    const row=(lbl,n,goal)=>{const ok=goal?n>=goal:n>0;const pct=goal?Math.min(100,Math.round(n/goal*100)):(n?100:0);return `<div class="grow"><span class="gl"><span class="gdot ${ok?"on":""}">${ok?"✓":""}</span>${lbl}</span><span class="gbar"><span style="width:${pct}%;${ok?"background:var(--ok)":""}"></span></span><b class="gv">${n}${goal?` de ${goal}`:""}</b></div>`};
     const all=tot>=g&&h>=gh&&f>=gf&&(!gp||pl>=gp);
     return `<div class="goal ${late?"goal-bad":all?"goal-ok":""}"><div class="row"><h2>¿Cómo vamos esta semana?</h2><span class="sp"></span><span class="sub" style="font-size:12px">${fmtDay(mon)} al ${fmtDay(sun)}</span></div>
       ${row("Publicaciones (reels, carruseles, feed)",tot,g)}${row("Reels o carruseles",f,gf)}${row("Historias",h,gh)}${row("Placas",pl,gp)}
-      <div class="grow"><span class="gl">Un contenido de cada pilar</span><span class="gchecks">${Object.entries(PIL).map(([k,v])=>`<span class="gc ${D.some(p=>p.pilar===k)?"on":""}">${D.some(p=>p.pilar===k)?"✓":"○"} ${v.short}</span>`).join("")}</span></div>
-      <div class="gmsg">${all?"🎉 ¡Objetivo de la semana cumplido!":late?`⚠️ Hay ${late} publicación${late>1?"es":""} aprobada${late>1?"s":""} que se pasó de fecha.`:"Cada vez que suban algo, tóquenlo en “Hoy subimos” y se va completando."}</div></div>`})()}
+      <div class="grow"><span class="gl"><span class="gdot ${Object.keys(PIL).every(k=>D.some(p=>p.pilar===k))?"on":""}">${Object.keys(PIL).every(k=>D.some(p=>p.pilar===k))?"✓":""}</span>Un contenido de cada pilar</span><span class="gchecks">${Object.entries(PIL).map(([k,v])=>{const on=D.some(p=>p.pilar===k);return on?`<span class="gc on">✓ ${v.short}</span>`:`<button class="gc gcb" data-regp="${k}" title="Registrar un contenido de ${v.short}">+ ${v.short}</button>`}).join("")}</span></div>
+      <div class="gmsg">${all?"🎉 ¡Objetivo de la semana cumplido!":late?`⚠️ Hay ${late} publicación${late>1?"es":""} aprobada${late>1?"s":""} que se pasó de fecha.`:"Esto se completa solo: las historias, reels y placas con el contador de arriba; los pilares, tocando <b>+ Valor</b>, <b>+ Experiencia</b> o <b>+ Producto</b> cuando suben ese contenido."}</div></div>`})()}
   <div class="stats">
     <div class="card stat"><div class="eyebrow">Publicaciones este mes</div><div class="n">${pubMes}</div><div class="sub" style="font-size:11px">Reels, carruseles y feed</div></div>
     <div class="card stat"><div class="eyebrow">Historias este mes</div><div class="n">${histMes}</div></div>
@@ -1062,7 +1066,7 @@ function openQuick(){
     if(!tot){toast("Sumá al menos una");return}dlg.close();toast(`Registradas ${tot}. Ya suman al conteo.`)};
   dlg.showModal();
 }
-function openReg(link){
+function openReg(link,pil){
   const t=todayS();const mon=weekDates()[0];
   const cand=S.posts.filter(p=>p.date>=ymd(new Date(parse(mon).getTime()-7*864e5))&&!["Publicado","Multimedios"].includes(p.estado)).sort((a,b)=>a.date>b.date?1:-1);
   const net=l=>/tiktok/i.test(l)?"TikTok":/facebook|fb\./i.test(l)?"Facebook":"Instagram";
@@ -1074,7 +1078,7 @@ function openReg(link){
     <div class="full" id="r_new" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <label style="grid-column:1/-1">Título<input id="r_title" placeholder="Ej.: Historia Ranger en la feria"></label>
       <label>Formato<select id="r_formato">${opt(FORMATOS,fmtL(link||""))}</select></label>
-      <label>Pilar<select id="r_pilar">${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${pillarForDate(t)===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
+      <label>Pilar<select id="r_pilar">${Object.entries(PIL).map(([k,v])=>`<option value="${k}" ${(pil||pillarForDate(t))===k?"selected":""}>${v.short}</option>`).join("")}</select></label>
       <label>Área<select id="r_area"><option value="">General</option>${Object.entries(AREAS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("")}</select></label>
       <label>Fecha<input type="date" id="r_date" value="${t}"></label>
     </div>
@@ -1101,7 +1105,7 @@ function wireModal(onDel){
 function bind(){
   const m=document.getElementById("main");
   m.onclick=e=>{
-    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-cplus],[data-cminus],[data-cday],[data-help],[data-hex],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-ideaa],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
+    const t=e.target.closest("[data-toggle],[data-move],[data-post],[data-task],[data-idea],[data-pick],[data-newpost],[data-act],[data-go],[data-regp],[data-cplus],[data-cminus],[data-cday],[data-help],[data-hex],[data-gi],[data-cm],[data-cmo],[data-ref],[data-rec],[data-use],[data-bt],[data-rt],[data-dm],[data-dun],[data-cal],[data-mode],[data-calf],[data-areaf],[data-ideaf],[data-ideaa],[data-addsub],[data-addmeta],[data-madd],[data-mdel]");if(!t)return;
     const d=t.dataset;
     if(d.toggle){e.stopPropagation();const x=S.tasks.find(x=>x.id===d.toggle);save("tasks",{...x,done:!x.done});return}
     if(d.move){e.stopPropagation();const p=S.posts.find(x=>x.id===d.move);save("posts",{...p,estado:d.to});return}
@@ -1112,6 +1116,7 @@ function bind(){
     if(d.newpost)return openPost(null,d.newpost);
     if(d.act==="reg")return openReg("");
     if(d.act==="quick")return openQuick();
+    if(d.regp)return openReg("",d.regp);
     if(d.cplus){bump(d.cplus,1);return}
     if(d.cminus){bump(d.cminus,-1);return}
     if(d.cday){const c=parse(cDay||todayS());c.setDate(c.getDate()+Number(d.cday));const n=ymd(c);cDay=n>todayS()?todayS():n;render();return}
