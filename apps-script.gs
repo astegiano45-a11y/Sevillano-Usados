@@ -247,15 +247,18 @@ function occurs_(t, s) {
   return diff % (t.repeat === 'quincenal' ? 14 : 7) <= len;
 }
 
+const q_ = p => Math.max(1, Number(p.cantidad) || 1);
+const sumq_ = arr => arr.reduce((n, p) => n + q_(p), 0);
+const isFeed_ = p => ['Historia', 'Placa'].indexOf(p.formato) < 0;
 function checks_(done, c) {
-  const h = done.filter(p => p.formato === 'Historia').length, f = done.filter(p => p.formato === 'Reel' || p.formato === 'Carrusel').length;
+  const h = sumq_(done.filter(p => p.formato === 'Historia')), f = sumq_(done.filter(p => p.formato === 'Reel' || p.formato === 'Carrusel')), pl = sumq_(done.filter(p => p.formato === 'Placa'));
   const it = (ok, t) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:3px 10px;border-radius:12px;font-size:13px;' + (ok ? 'background:#E1F5EC;color:#0E9F6E' : 'background:#FDEBDF;color:#C2410C') + '">' + (ok ? '✓ ' : '✗ ') + t + '</span>';
   return '<p>' + it(h >= c.gHist, 'Historias ' + h + '/' + c.gHist) + it(f >= c.gFeed, 'Reel o carrusel ' + f + '/' + c.gFeed) +
     Object.keys(PIL_NAME).map(k => it(done.some(p => p.pilar === k), PIL_NAME[k])).join('') +
-    (c.gPlaca ? it(done.filter(p => p.formato === 'Placa').length >= c.gPlaca, 'Placas ' + done.filter(p => p.formato === 'Placa').length + '/' + c.gPlaca) : ' <span style="font-size:13px">Placas: <b>' + done.filter(p => p.formato === 'Placa').length + '</b></span>') + '</p>';
+    (c.gPlaca ? it(pl >= c.gPlaca, 'Placas ' + pl + '/' + c.gPlaca) : ' <span style="font-size:13px">Placas: <b>' + pl + '</b></span>') + '</p>';
 }
 function postLine_(p) {
-  return '<li><b>' + esc_(p.title) + '</b> <span style="color:#5D6880">· ' + nice_(p.date) + ' · ' + (PIL_NAME[p.pilar] || 'Sin pilar') +
+  return '<li><b>' + (q_(p) > 1 && !/^\d/.test(p.title || '') ? q_(p) + '× ' : '') + esc_(p.title) + '</b> <span style="color:#5D6880">· ' + nice_(p.date) + ' · ' + (PIL_NAME[p.pilar] || 'Sin pilar') +
     (p.area ? ' · ' + AREA_NAME[p.area] : '') + ' · ' + esc_(p.formato || '') + ' · <i>' + esc_(p.estado || 'Idea') + '</i></span></li>';
 }
 function esc_(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
@@ -281,7 +284,7 @@ function buildDiario_() {
   const hoyP = data.posts.filter(p => p.date === t);
   const atras = data.posts.filter(p => p.date < t && p.date >= fmt_(add_(today, -14)) && ['Guion', 'Grabado', 'Editado'].indexOf(p.estado) >= 0);
   const hoyT = data.tasks.filter(x => occurs_(x, t) && !(x.done && !x.repeat)).sort((a, b) => (a.time || '') > (b.time || '') ? 1 : -1);
-  const week = data.posts.filter(p => p.date >= mon && p.date <= sun); const done = week.filter(p => DONE.indexOf(p.estado) >= 0).length;
+  const week = data.posts.filter(p => p.date >= mon && p.date <= sun); const done = sumq_(week.filter(p => DONE.indexOf(p.estado) >= 0 && isFeed_(p)));
   let h = '';
   h += '<h3>📲 Hoy se publica</h3>' + (hoyP.length ? '<ul>' + hoyP.map(postLine_).join('') + '</ul>' : '<p style="color:#5D6880">No hay publicación planificada para hoy.</p>');
   if (atras.length) h += '<h3 style="color:#C2410C">⚠️ Atrasadas (no se marcaron como publicadas)</h3><ul>' + atras.map(postLine_).join('') + '</ul>';
@@ -297,8 +300,10 @@ function resumen_(from, to, goalTotal, weekly) {
   const c = cfg_(); const { data } = c;
   const ps = data.posts.filter(p => p.date >= from && p.date <= to);
   const done = ps.filter(p => DONE.indexOf(p.estado) >= 0); const pend = ps.filter(p => ['Guion', 'Grabado', 'Editado'].indexOf(p.estado) >= 0);
-  const cnt = (arr, key, names) => Object.keys(names).map(k => names[k] + ': <b>' + arr.filter(p => p[key] === k).length + '</b>').join(' · ') + ' · Sin asignar: <b>' + arr.filter(p => !names[p[key]]).length + '</b>';
-  let h = '<h3>🎯 ' + done.length + ' de ' + goalTotal + ' publicaciones (' + Math.round(done.length / goalTotal * 100) + '%)</h3>' + bar_(done.length, goalTotal);
+  const cnt = (arr, key, names) => Object.keys(names).map(k => names[k] + ': <b>' + sumq_(arr.filter(p => p[key] === k)) + '</b>').join(' · ') + ' · Sin asignar: <b>' + sumq_(arr.filter(p => !names[p[key]])) + '</b>';
+  const feedN = sumq_(done.filter(isFeed_)); const fm = k => sumq_(done.filter(p => p.formato === k));
+  let h = '<h3>🎯 ' + feedN + ' de ' + goalTotal + ' publicaciones (' + Math.round(feedN / goalTotal * 100) + '%)</h3>' + bar_(feedN, goalTotal);
+  h += '<p><b>Trabajo realizado:</b> Reels: <b>' + fm('Reel') + '</b> · Carruseles: <b>' + fm('Carrusel') + '</b> · Historias: <b>' + fm('Historia') + '</b> · Placas: <b>' + fm('Placa') + '</b>' + (fm('Feed') ? ' · Feed: <b>' + fm('Feed') + '</b>' : '') + '</p>';
   if (weekly) h += checks_(done, c);
   h += '<p><b>Por pilar:</b> ' + cnt(done, 'pilar', PIL_NAME) + '</p><p><b>Por área:</b> ' + cnt(done, 'area', AREA_NAME) + '</p>';
   const mm = done.filter(p => p.estado === 'Multimedios').length; if (mm) h += '<p><b>En multimedios (radio, diario, TV):</b> ' + mm + '</p>';

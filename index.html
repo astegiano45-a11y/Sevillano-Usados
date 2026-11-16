@@ -89,7 +89,7 @@ h2{font-size:18px;font-weight:700}
 .slot.valor{border-top:4px solid var(--valor)} .slot.exp{border-top:4px solid var(--exp)} .slot.prod{border-top:4px solid var(--prod)}
 .slot .t{font-weight:700}
 .empty{color:var(--muted);font-size:13px;border:1px dashed var(--line);border-radius:10px;padding:12px;text-align:center}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
 @media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat .n{font-family:var(--f-display);font-weight:900;font-size:28px;font-variant-numeric:tabular-nums}
 .list{display:flex;flex-direction:column;gap:6px}
@@ -222,6 +222,11 @@ h2{font-size:18px;font-weight:700}
 .tp{display:flex;flex-direction:column}.tp-s{font-family:"Montserrat",system-ui,sans-serif;font-size:20px;line-height:1.2}
 .ln{border-radius:12px;padding:14px 16px}.ln p{margin:8px 0 0;font-size:13px;line-height:1.5}
 .ln-t{font-family:"Montserrat",system-ui,sans-serif;font-weight:800;font-size:16px;padding-bottom:6px;display:inline-block}
+.qgrid{display:flex;flex-direction:column;gap:8px}
+.qrow{display:flex;align-items:center;gap:8px}
+.ql{flex:1;font-weight:700}
+.qb{width:40px;height:40px;padding:0;font-size:18px}
+.qn{width:64px;text-align:center;font:700 18px var(--f-display)}
 .legend{display:flex;gap:8px;flex-wrap:wrap}
 /* kanban */
 .board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;margin-top:16px;overflow-x:auto;padding-bottom:8px}
@@ -470,26 +475,28 @@ function vHoy(){
   const prox=pend.filter(x=>!hoyT.includes(x)&&(!x.date||x.date>t||x.repeat)).slice(0,8);
   const atras=S.posts.filter(p=>p.date<t&&["Guion","Grabado","Editado"].includes(p.estado));
   const sinAprobar=S.posts.filter(p=>p.date<t&&(p.estado||"Idea")==="Idea").length;
-  const mes=new Date().getMonth();const pubMes=S.posts.filter(p=>(p.estado==="Publicado"||p.estado==="Multimedios")&&parse(p.date).getMonth()===mes).length;
+  const mes=new Date().getMonth();const yr=new Date().getFullYear();const MD=S.posts.filter(p=>isDone(p)&&parse(p.date).getMonth()===mes&&parse(p.date).getFullYear()===yr);const pubMes=sumQ(MD.filter(isFeed)),histMes=sumQ(MD.filter(p=>p.formato==="Historia")),placMes=sumQ(MD.filter(p=>p.formato==="Placa"));
   const enProd=S.posts.filter(p=>!["Publicado","Multimedios","Idea"].includes(p.estado)).length;
   return `
   <div class="row"><div><div class="eyebrow">${DIAS[new Date().getDay()]} ${new Date().getDate()} de ${MESES[new Date().getMonth()]}</div><h1>Esta semana en redes</h1></div><span class="sp"></span>
-  <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn" data-act="newpost">+ Planificar</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
+  <button class="btn" data-act="newtask">+ Tarea / reunión</button><button class="btn" data-act="newpost">+ Planificar</button><button class="btn" data-act="quick">⚡ Carga rápida</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
   ${sinAprobar?`<div class="card row" style="margin-top:14px;border-color:var(--prod)"><span>Hay <b>${sinAprobar}</b> publicaciones con fecha pasada que nunca pasaron de <b>Idea</b>. No cuentan como atrasadas.</span><span class="sp"></span><button class="btn" data-act="cleanup">Devolverlas al banco de ideas</button></div>`:""}
   ${(()=>{const g=Number(brand().goal)||3;const wk=weekDates();const mon=wk[0];const sun=ymd(new Date(parse(mon).getTime()+6*864e5));
-    const ws=S.posts.filter(p=>p.date>=mon&&p.date<=sun);const done=ws.filter(p=>["Publicado","Multimedios"].includes(p.estado)).length;
+    const ws=S.posts.filter(p=>p.date>=mon&&p.date<=sun);const done=sumQ(ws.filter(p=>isDone(p)&&isFeed(p)));
     const dueBy=ws.filter(p=>p.date<=t).length;const late=ws.filter(p=>p.date<t&&["Guion","Grabado","Editado"].includes(p.estado)).length;
     const st=done>=g?"ok":late?"bad":"mid";const pct=Math.min(100,Math.round(done/g*100));
     return `<div class="goal goal-${st}"><div class="row"><span class="eyebrow">Objetivo semanal</span><span class="sp"></span><b class="gnum">${done} de ${g} publicadas</b></div>
     <div class="gbar"><span style="width:${pct}%"></span></div>
     <div class="gchecks">${(()=>{const D=ws.filter(p=>["Publicado","Multimedios"].includes(p.estado));const b=brand();
-      const h=D.filter(p=>p.formato==="Historia").length,f=D.filter(p=>p.formato==="Reel"||p.formato==="Carrusel").length;
+      const h=sumQ(D.filter(p=>p.formato==="Historia")),f=sumQ(D.filter(p=>p.formato==="Reel"||p.formato==="Carrusel"));
       const c=(ok,txt)=>`<span class="gc ${ok?"on":""}">${ok?"✓":"○"} ${txt}</span>`;
-      const pl=D.filter(p=>p.formato==="Placa").length;const gp=Number(b.goalPlaca)||0;
+      const pl=sumQ(D.filter(p=>p.formato==="Placa"));const gp=Number(b.goalPlaca)||0;
       return c(h>=(b.goalHist||1),`Historias ${h}/${b.goalHist||1}`)+c(f>=(b.goalFeed||2),`Reel o carrusel ${f}/${b.goalFeed||2}`)+Object.entries(PIL).map(([k,v])=>c(D.some(p=>p.pilar===k),v.short)).join("")+(gp?c(pl>=gp,`Placas ${pl}/${gp}`):`<span class="gc ${pl?"on":""}">Placas: ${pl}</span>`)})()}</div>
-    <div class="gmsg">${done>=g?"¡Objetivo cumplido esta semana!":late?`Van ${late} atrasada${late>1?"s":""}. Planificadas esta semana: ${ws.length}.`:ws.length<g?`Faltan planificar ${g-ws.length} publicación${g-ws.length>1?"es":""} esta semana.`:"Vamos bien. Seguí moviendo las tarjetas a Publicado."}</div></div>`})()}
+    <div class="gmsg">${done>=g?"¡Objetivo cumplido esta semana!":late?`Van ${late} atrasada${late>1?"s":""}. Planificadas esta semana: ${ws.filter(isFeed).length}.`:ws.filter(isFeed).length<g?`Faltan planificar ${g-ws.filter(isFeed).length} publicación${g-ws.filter(isFeed).length>1?"es":""} esta semana.`:"Vamos bien. Seguí moviendo las tarjetas a Publicado."}</div></div>`})()}
   <div class="stats">
-    <div class="card stat"><div class="eyebrow">Publicadas este mes</div><div class="n">${pubMes}</div></div>
+    <div class="card stat"><div class="eyebrow">Publicaciones este mes</div><div class="n">${pubMes}</div><div class="sub" style="font-size:11px">Reels, carruseles y feed</div></div>
+    <div class="card stat"><div class="eyebrow">Historias este mes</div><div class="n">${histMes}</div></div>
+    <div class="card stat"><div class="eyebrow">Placas este mes</div><div class="n">${placMes}</div></div>
     <div class="card stat"><div class="eyebrow">En producción</div><div class="n">${enProd}</div></div>
     <div class="card stat"><div class="eyebrow">Atrasadas</div><div class="n" style="color:${atras.length?"var(--warn)":"inherit"}">${atras.length}</div></div>
     <div class="card stat"><div class="eyebrow">Ideas guardadas</div><div class="n">${S.ideas.length}</div></div>
@@ -519,6 +526,10 @@ function occ(x,s){
   if(!start)return null;
   const i=dayN(s)-dayN(start);return {i,len,first:i===0,last:i===len};
 }
+const qty=p=>Math.max(1,Number(p.cantidad)||1);
+const isFeed=p=>!["Historia","Placa"].includes(p.formato);
+const sumQ=a=>a.reduce((n,p)=>n+qty(p),0);
+const isDone=p=>["Publicado","Multimedios"].includes(p.estado);
 function taskRow(x){return `<div class="item ${x.done?"done":""}" data-task="${x.id}"><button class="check ${x.done?"on":""}" data-toggle="${x.id}" aria-label="Marcar como hecha"></button><span class="when">${x.date?fmtDay(x.date):"Sin fecha"}${x.time?"<br>"+x.time:""}</span><div class="txt"><div class="kind k-${x.tipo||"tarea"}">${esc(x.tipo||"tarea")}</div><div class="t">${esc(x.title)}</div>${x.lugar?`<div class="sub" style="font-size:12px">${esc(x.lugar)}</div>`:""}</div></div>`}
 
 function evHtml(s,detail){
@@ -565,7 +576,7 @@ function vProd(){
         <div class="row">${areaB(p.area)}${pillOf(p.pilar)}${p.auto?`<span class="chip">${esc(p.auto)}</span>`:""}</div>
         <div class="mv">${k>0?`<button data-move="${p.id}" data-to="${ESTADOS[k-1]}" aria-label="Mover atrás">←</button>`:""}${k<ESTADOS.length-1?`<button data-move="${p.id}" data-to="${ESTADOS[k+1]}" aria-label="Mover adelante">→</button>`:""}</div></div>`}).join("")||`<div class="empty">Arrastrá tarjetas acá</div>`}
     </div>`}).join("");
-  return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn" data-act="cleanup">Devolver ideas sin aprobar al banco</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
+  return `<div class="row"><h1>Producción</h1><span class="sp"></span><button class="btn" data-act="cleanup">Devolver ideas sin aprobar al banco</button><button class="btn" data-act="quick">⚡ Carga rápida</button><button class="btn pri" data-act="reg">✓ Registrar lo publicado</button></div>
   <p class="sub" style="margin:6px 0 0">Arrastrá cada publicación a la columna de su estado, o usá las flechas.</p><div class="board">${cols}</div>`;
 }
 let ideaArea="all";
@@ -686,7 +697,7 @@ const GUIA=[
  {t:"Durante la semana: avanzar el trabajo",go:"prod",d:"En Producción cada publicación es una tarjeta que avanza por columnas.",
   p:["Columnas: <b>Idea → Guion → Grabado → Editado → Publicado → Multimedios</b>.","Cuando grabás, mové la tarjeta a <b>Grabado</b> con la flecha <b>→</b> (o arrastrándola en la compu). Lo mismo al editar.","Si algo aprobado (Guion, Grabado o Editado) se pasa de fecha, aparece como <b>atrasado</b> en rojo.","Si una idea no va más, abrila y tocá <b>Devolver al banco</b>: vuelve al Banco de ideas sin borrarse."]},
  {t:"Cuando publicás: registrarlo",go:"hoy",d:"La app no se entera sola de lo que subís a Instagram: hay que registrarlo. Tarda 20 segundos.",
-  p:["Tocá el botón azul <b>✓ Registrar lo publicado</b> (en Inicio o Producción).","Pegá el <b>link</b> de la publicación de Instagram (opcional pero recomendado). Reconoce solo si es reel, carrusel o historia.","En “¿Era algo planificado?” elegí cuál era. Si no estaba planificado, dejá “No, es algo nuevo” y completá título, formato, pilar y área.","Las <b>placas</b> se registran igual: formato <b>Placa</b>.","Tocá <b>✓ Registrar</b>. Suma al objetivo semanal al instante.","<b>En Android</b>, más rápido: en Instagram tocá <b>Compartir → Marketing FS → Lo publicamos nosotros</b>."]},
+  p:["Tocá el botón azul <b>✓ Registrar lo publicado</b> (en Inicio o Producción).","Pegá el <b>link</b> de la publicación de Instagram (opcional pero recomendado). Reconoce solo si es reel, carrusel o historia.","En “¿Era algo planificado?” elegí cuál era. Si no estaba planificado, dejá “No, es algo nuevo” y completá título, formato, pilar y área.","Las <b>placas</b> se registran igual: formato <b>Placa</b>.","Para varias historias o placas juntas usá <b>⚡ Carga rápida</b>: elegís la fecha, sumás la cantidad y guardás. Sirve también para cargar días anteriores.","Tocá <b>✓ Registrar</b>. Suma al objetivo semanal al instante.","<b>En Android</b>, más rápido: en Instagram tocá <b>Compartir → Marketing FS → Lo publicamos nosotros</b>."]},
  {t:"Banco de ideas",go:"ideas",d:"Toda idea que aparezca, en cualquier momento, va acá. Después se usa cuando arman la semana.",
   p:["Tocá <b>+ Idea</b>. Alcanza con el título.","Elegí el <b>pilar</b> y, si querés, sección, gancho y prioridad (Alta aparece primero).","Para usarla: abrila y tocá <b>Pasar al calendario</b>, o elegila desde <b>Del banco</b> en Inicio."]},
  {t:"Biblioteca: material y referencias",go:"bib",d:"Dos solapas: el material propio de Drive y las referencias de otras cuentas.",
@@ -706,8 +717,8 @@ const TABHELP={
   ["Registrar lo publicado (botón azul)","Cuando suben algo a Instagram, lo registran acá para que cuente. Pegás el link y listo."],
   ["+ Planificar","Crea una publicación para una fecha futura."],
   ["+ Tarea / reunión","Carga reuniones, eventos, recordatorios o tareas con fecha. Te avisa en el celular."],
-  ["Objetivo semanal","La barra muestra cuántas publicaciones van de las 3 de la semana. Los círculos marcan si ya hubo historia, reels o carruseles, una de cada pilar y cuántas placas. Verde = cumplido; borde rojo = hay algo atrasado."],
-  ["Publicadas este mes","Cuántas publicaciones se marcaron como Publicado o Multimedios en el mes."],
+  ["⚡ Carga rápida","Para contar historias, placas, reels o carruseles por cantidad sin cargar uno por uno: elegís la fecha, sumás con + y guardás."],["Objetivo semanal","La barra muestra cuántas publicaciones (reels, carruseles o feed) van de las 3 de la semana; historias y placas se cuentan aparte. Los círculos marcan si ya hubo historia, reels o carruseles, una de cada pilar y cuántas placas. Verde = cumplido; borde rojo = hay algo atrasado."],
+  ["Publicaciones / Historias / Placas este mes","El conteo del mes de cada tipo de trabajo. Todo lo registrado (uno por uno o con carga rápida) suma acá."],
   ["En producción","Cuántas están en marcha (Guion, Grabado o Editado)."],
   ["Atrasadas","Publicaciones aprobadas cuya fecha ya pasó y no se publicaron. Las que quedaron en Idea no cuentan."],
   ["Ideas guardadas","Cuántas ideas hay en el Banco para usar."],
@@ -974,6 +985,23 @@ function pickIdea(date,pk){
   dlg.onsubmit=null;frm.onsubmit=e=>e.preventDefault();
   dlg.showModal();
 }
+function openQuick(){
+  const t=todayS();const F=[["Historia","Historias"],["Placa","Placas"],["Reel","Reels"],["Carrusel","Carruseles"]];
+  frm.innerHTML=`<div class="mh"><h2>⚡ Carga rápida</h2></div><div class="mb">
+   <div class="full sub">Para contar lo que ya subieron sin cargar uno por uno. Ej.: “hoy 5 historias y 2 placas”.</div>
+   <label>Fecha<input type="date" id="q_date" value="${t}"></label>
+   <label>Área (opcional)<select id="q_area"><option value="">General</option>${Object.entries(AREAS).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join("")}</select></label>
+   <div class="full qgrid">${F.map(([k,l])=>`<div class="qrow"><span class="ql">${l}</span><button type="button" class="btn qb" data-qm="${k}" aria-label="Restar">−</button><input type="number" min="0" max="99" value="0" id="q_${k}" class="qn" inputmode="numeric"><button type="button" class="btn qb" data-qp="${k}" aria-label="Sumar">+</button></div>`).join("")}</div>
+   <label class="full">Nota (opcional)<input id="q_nota" placeholder="Ej.: historias de la feria de usados"></label>
+  </div><div class="mf"><span class="sp"></span><button type="button" class="btn" data-close>Cancelar</button><button class="btn pri">Guardar</button></div>`;
+  frm.querySelectorAll("[data-qp],[data-qm]").forEach(b=>b.onclick=()=>{const k=b.dataset.qp||b.dataset.qm;const el=frm.querySelector("#q_"+k);el.value=Math.max(0,(Number(el.value)||0)+(b.dataset.qp?1:-1))});
+  frm.querySelector("[data-close]").onclick=()=>dlg.close();
+  frm.onsubmit=async e=>{e.preventDefault();const d=frm.querySelector("#q_date").value||t;const area=frm.querySelector("#q_area").value;const nota=frm.querySelector("#q_nota").value.trim();let tot=0;
+    for(const [k,l] of F){const n=Math.min(99,Math.max(0,Number(frm.querySelector("#q_"+k).value)||0));if(!n)continue;tot+=n;
+      await save("posts",{id:uid(),title:`${n} ${n>1?l.toLowerCase():k.toLowerCase()}${nota?" · "+nota:""}`,date:d,formato:k,cantidad:n,area,pilar:"",red:"Instagram",estado:"Publicado",rapida:true})}
+    if(!tot){toast("Sumá al menos una");return}dlg.close();toast(`Registradas ${tot}. Ya suman al conteo.`)};
+  dlg.showModal();
+}
 function openReg(link){
   const t=todayS();const mon=weekDates()[0];
   const cand=S.posts.filter(p=>p.date>=ymd(new Date(parse(mon).getTime()-7*864e5))&&!["Publicado","Multimedios"].includes(p.estado)).sort((a,b)=>a.date>b.date?1:-1);
@@ -1023,6 +1051,7 @@ function bind(){
     if(d.pick)return pickIdea(d.pick,d.pk);
     if(d.newpost)return openPost(null,d.newpost);
     if(d.act==="reg")return openReg("");
+    if(d.act==="quick")return openQuick();
     if(d.act==="newref")return openRef(null,"");
     if(d.act==="newrec")return openRec(null);
     if(d.ref)return openRef(d.ref);
