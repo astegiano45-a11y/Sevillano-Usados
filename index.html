@@ -391,10 +391,38 @@ async function api(body){
   const r=await fetch(sheetUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
   const j=await r.json();if(!j.ok)throw new Error(j.error||"error");return j;
 }
-async function push(body){
-  if(!sheetUrl)return;
-  try{await api(body);setStatus(true,"Sincronizado con Google Sheets")}
-  catch(e){setStatus(false,"Sin conexión: guardado en este navegador");toast("No se pudo sincronizar. Quedó guardado en este navegador.")}
+/* Cola de envíos: en orden, uno por vez, y lo que falla queda guardado para reintentar */
+let outbox=local.get("outbox")||[];let flushing=null;let lastWrite=0;
+function push(body){
+  if(!sheetUrl)return Promise.resolve();
+  outbox.push({...body,_t:Date.now()});local.set("outbox",outbox);lastWrite=Date.now();
+  return flush();
+}
+function flush(){
+  if(flushing)return flushing;
+  flushing=(async()=>{
+    while(outbox.length){
+      const op=outbox[0];const {_t,...body}=op;
+      try{const j=await api(body);if(body.action==="inc"&&j.item!==undefined)applyInc(body,j)}
+      catch(e){
+        if(body.action==="inc"&&/desconocida/i.test(String(e.message))){ /* script viejo: mandar el valor final */
+          const it=S.posts.find(x=>x.id===body.id);
+          try{if(it)await api({action:"upsert",sheet:"posts",item:it});else await api({action:"delete",sheet:"posts",id:body.id})}catch(e2){setStatus(false,"Sin conexión · "+outbox.length+" cambio(s) pendientes, se guardan solos");break}
+        }else{setStatus(false,"Sin conexión · "+outbox.length+" cambio(s) pendientes, se guardan solos");break}
+      }
+      outbox.shift();local.set("outbox",outbox);
+    }
+    if(!outbox.length)setStatus(true,"Sincronizado con Google Sheets");
+    flushing=null;
+  })();
+  return flushing;
+}
+function applyInc(body,j){
+  const i=S.posts.findIndex(x=>x.id===body.id);
+  const pend=outbox.slice(1).filter(o=>o.action==="inc"&&o.id===body.id).reduce((n,o)=>n+o.delta,0);
+  if(j.deleted||!j.item){if(!pend&&i>=0){S.posts.splice(i,1)}}
+  else{const it={...j.item,cantidad:Math.max(0,(Number(j.item.cantidad)||0)+pend)};if(i>=0)S.posts[i]=it;else if(it.cantidad)S.posts.push(it)}
+  persist();render();
 }
 function persist(){COLLS.forEach(k=>local.set(k,S[k]));local.set("brand",S.brand);local.set("drive",S.drive);local.set("driveMeta",S.driveMeta)}
 async function save(coll,item){
@@ -409,9 +437,12 @@ async function remove(coll,id){
 async function saveBrand(b){S.brand=b;persist();render();push({action:"upsert",sheet:"config",item:{id:"brand",...b}})}
 async function pull(){
   if(!sheetUrl)return;
+  if(outbox.length){await flush();if(outbox.length)return}
+  if(Date.now()-lastWrite<8000)return;
   if(importing||dlg.open||document.activeElement&&document.activeElement.isContentEditable)return;
   try{
     const j=await api({action:"all"});
+    if(outbox.length||Date.now()-lastWrite<8000)return;
     COLLS.forEach(k=>S[k]=j.data[k]||[]);S.drive=j.data.drive||[];S.driveMeta=(j.data.config||[]).find(x=>x.id==="drivemeta")||null;
     const b=(j.data.config||[]).find(x=>x.id==="brand");S.imports=(j.data.config||[]).find(x=>x.id==="imports")||null;S.brand=b||S.brand;
     persist();render();setStatus(true,"Sincronizado con Google Sheets");
@@ -1006,10 +1037,13 @@ function counterHtml(){const d=cDay||todayS();const isT=d===todayS();
   return `<div class="counter"><div class="row"><h2>Hoy subimos</h2><span class="sp"></span><button class="btn ghost" data-cday="-1" aria-label="Día anterior">‹</button><b class="cdate">${isT?"Hoy":fmtDay(d)}</b><button class="btn ghost" data-cday="1" aria-label="Día siguiente" ${isT?"disabled":""}>›</button></div>
   <p class="sub" style="margin:2px 0 10px;font-size:12px">Tocá <b>+</b> cada vez que suben algo. Para cargar otro día, cambiá la fecha con las flechas.</p>
   <div class="cgrid">${CF.map(([k,l,ic])=>{const r=S.posts.find(p=>p.id===`q_${d}_${k}`);const n=r?qty(r):0;return `<div class="cbox ${n?"on":""}"><span class="cic">${ic}</span><span class="cl">${l}</span><span class="cn">${n}</span><div class="cbtns"><button class="btn" data-cminus="${k}" aria-label="Restar ${l}" ${n?"":"disabled"}>−</button><button class="btn pri" data-cplus="${k}" aria-label="Sumar ${l}">+</button></div></div>`}).join("")}</div></div>`}
-function bump(k,delta){const d=cDay||todayS();const id=`q_${d}_${k}`;const r=S.posts.find(p=>p.id===id);const n=Math.max(0,(r?qty(r):0)+delta);
-  const l=CF.find(x=>x[0]===k)[1].toLowerCase();
-  if(!n){if(r)remove("posts",id);return}
-  save("posts",{...(r||{}),id,title:`${n} ${n>1?l:k.toLowerCase()}`,date:d,formato:k,cantidad:n,pilar:r?.pilar||"",area:r?.area||"",red:"Instagram",estado:"Publicado",rapida:true});
+function bump(k,delta){const d=cDay||todayS();const id=`q_${d}_${k}`;const i=S.posts.findIndex(p=>p.id===id);const r=i>=0?S.posts[i]:null;
+  const cur=r?(Number(r.cantidad)||0):0;const n=Math.max(0,cur+delta);if(n===cur)return;
+  const l=CF.find(x=>x[0]===k)[1];
+  const base={id,title:"",date:d,formato:k,pilar:"",area:"",red:"Instagram",estado:"Publicado",rapida:true,label:l};
+  if(!n){S.posts.splice(i,1)}else{const it={...(r||base),cantidad:n,title:`${n} ${n>1?l.toLowerCase():k.toLowerCase()}`,updated:new Date().toISOString()};if(r)S.posts[i]=it;else S.posts.push(it)}
+  persist();render();
+  push({action:"inc",sheet:"posts",id,delta:n-cur,base});
 }
 function openQuick(){
   const t=todayS();const F=[["Historia","Historias"],["Placa","Placas"],["Reel","Reels"],["Carrusel","Carruseles"]];
@@ -1144,6 +1178,7 @@ document.getElementById("syncBtn").onclick=openSync;
 setTimeout(()=>{try{if(!localStorage.getItem("cos_welcome")&&!location.search)openWelcome()}catch(e){}},900);
 (()=>{try{const q=new URLSearchParams(location.search);const sh=q.get("url")||q.get("text")||"";const m=sh.match(/https?:\/\/\S+/);
   if(q.has("share")||m){history.replaceState(null,"",location.pathname);setTimeout(()=>{view="hoy";render();(m||sh)&&!q.has("share")?openShared(m?m[0]:sh):openReg(m?m[0]:sh)},400)}}catch(e){}})();
+window.addEventListener('online',()=>flush());
 init();
 </script>
 </body>

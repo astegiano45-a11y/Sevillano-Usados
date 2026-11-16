@@ -32,6 +32,16 @@ function doPost(e) {
     if (body.action === 'all') return json_({ ok: true, data: readAll_() });
     if (!SHEETS[body.sheet] || body.sheet === 'drive') return json_({ ok: false, error: 'Hoja desconocida' });
     if (body.action === 'upsert') { const isNewCm = body.sheet === 'comentarios' && findRow_(sheet_('comentarios'), body.item.id) < 0; upsert_(body.sheet, body.item); if (isNewCm) try { avisoComentario_(body.item); } catch (e) {} try { calSync_(body.sheet, body.item); } catch (e) {} return json_({ ok: true }); }
+    if (body.action === 'inc') {
+      const sh = sheet_(body.sheet); const r = findRow_(sh, body.id); const col = SHEETS[body.sheet].indexOf('json') + 1;
+      let it = r > 0 ? JSON.parse(sh.getRange(r, col).getValue() || '{}') : Object.assign({}, body.base || {}, { id: body.id });
+      const n = Math.max(0, (Number(it.cantidad) || 0) + Number(body.delta || 0));
+      if (!n) { if (r > 0) { del_(body.sheet, body.id); try { calDelete_(body.sheet, body.id); } catch (e) {} } return json_({ ok: true, deleted: true, item: null }); }
+      const l = it.label || (body.base && body.base.label) || it.formato || '';
+      it.cantidad = n; it.title = n + ' ' + (n > 1 ? String(l).toLowerCase() : String(it.formato || '').toLowerCase()); it.updated = new Date().toISOString();
+      upsert_(body.sheet, it);
+      return json_({ ok: true, item: it });
+    }
     if (body.action === 'delete') { del_(body.sheet, body.id); try { calDelete_(body.sheet, body.id); } catch (e) {} return json_({ ok: true }); }
     return json_({ ok: false, error: 'Acción desconocida' });
   } catch (err) {
