@@ -352,19 +352,34 @@ function syncDrive() {
   const b = (readAll_().config || []).find(x => x.id === 'brand') || {};
   const m = String(b.driveFolder || '').match(/folders\/([\w-]+)/) || String(b.driveFolder || '').match(/^([\w-]{20,})$/);
   if (!m) { Logger.log('No hay carpeta de Drive configurada en Marca.'); return; }
-  const out = [];
+  const out = [], seen = {}, porCarpeta = {}, t0 = Date.now();
+  const add = (f, path) => {
+    if (seen[f.getId()]) return; seen[f.getId()] = 1;
+    const mime = f.getMimeType();
+    const tipo = mime.indexOf('video/') === 0 ? 'Video' : mime.indexOf('image/') === 0 ? 'Imagen' : null;
+    if (!tipo) return;
+    const name = f.getName();
+    const mod = MODELOS.find(x => name.toLowerCase().replace(/[\s_-]/g, '').indexOf(x.toLowerCase().replace(/[\s_-]/g, '')) >= 0) || '';
+    const it = { id: f.getId(), nombre: name, carpeta: path, tipo: tipo, modelo: mod, fecha: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd') };
+    out.push([it.id, it.nombre, it.carpeta, it.tipo, it.fecha, JSON.stringify(it)]);
+    const top = path.split(' / ')[1] || path; porCarpeta[top] = (porCarpeta[top] || 0) + 1;
+  };
   const walk = (folder, path, depth) => {
+    if (seen['F' + folder.getId()] || Date.now() - t0 > 300000) return; seen['F' + folder.getId()] = 1;
     const files = folder.getFiles();
-    while (files.hasNext() && out.length < 3000) {
-      const f = files.next(); const mime = f.getMimeType();
-      const tipo = mime.indexOf('video/') === 0 ? 'Video' : mime.indexOf('image/') === 0 ? 'Imagen' : null;
-      if (!tipo) continue;
-      const name = f.getName();
-      const mod = MODELOS.find(x => name.toLowerCase().replace(/[\s_-]/g, '').indexOf(x.toLowerCase().replace(/[\s_-]/g, '')) >= 0) || '';
-      const it = { id: f.getId(), nombre: name, carpeta: path, tipo: tipo, modelo: mod, fecha: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd') };
-      out.push([it.id, it.nombre, it.carpeta, it.tipo, it.fecha, JSON.stringify(it)]);
+    while (files.hasNext() && out.length < 5000) {
+      const f = files.next();
+      if (f.getMimeType() === 'application/vnd.google-apps.shortcut') {   // accesos directos a carpetas o archivos
+        try {
+          const tid = f.getTargetId(), tm = f.getTargetMimeType();
+          if (tm === 'application/vnd.google-apps.folder') { if (depth < 5) { const tf = DriveApp.getFolderById(tid); walk(tf, path + ' / ' + f.getName(), depth + 1); } }
+          else add(DriveApp.getFileById(tid), path);
+        } catch (e) {}
+        continue;
+      }
+      add(f, path);
     }
-    if (depth > 4) return;
+    if (depth >= 5) return;
     const subs = folder.getFolders();
     while (subs.hasNext()) { const s = subs.next(); walk(s, path + ' / ' + s.getName(), depth + 1); }
   };
@@ -373,10 +388,9 @@ function syncDrive() {
   const sh = sheet_('drive');
   if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, SHEETS.drive.length).clearContent();
   if (out.length) sh.getRange(2, 1, out.length, SHEETS.drive.length).setValues(out);
-  upsert_('config', { id: 'drivemeta', at: new Date().toISOString(), count: out.length });
-  Logger.log('Biblioteca: ' + out.length + ' archivos.');
+  upsert_('config', { id: 'drivemeta', at: new Date().toISOString(), count: out.length, root: root.getName(), porCarpeta: porCarpeta });
+  Logger.log('Biblioteca: ' + out.length + ' archivos de "' + root.getName() + '": ' + JSON.stringify(porCarpeta));
 }
-
 
 /* ================= COMENTARIOS DE LA GUÍA =================
  * Cuando alguien deja una duda o sugerencia en la app, te llega un mail.

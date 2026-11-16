@@ -655,7 +655,7 @@ function vBib(){
     .sort((a,b)=>(b.fecha||"")>(a.fecha||"")?1:-1);
   const models=MODELOS.filter(m=>S.drive.some(f=>f.modelo===m));
   return `<div class="row"><h1>Biblioteca</h1><span class="sp"></span>${seg}</div>
-  <p class="sub" style="margin:6px 0 0">${meta?`${S.drive.length} archivos de la carpeta de Drive · actualizada ${new Date(meta.at).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short"})} · se actualiza sola cada hora`:`Todavía no se leyó la carpeta de Drive. Cargá el link de la carpeta en <b>Marca</b> y ejecutá <b>setupAvisos</b> en Apps Script.`}</p>
+  <p class="sub" style="margin:6px 0 0">${meta?`${meta.root?`Carpeta <b>${esc(meta.root)}</b> · `:""}${S.drive.length} archivos${meta.porCarpeta?` (${Object.entries(meta.porCarpeta).map(([k,v])=>`${esc(k)}: ${v}`).join(" · ")})`:""} · actualizada ${new Date(meta.at).toLocaleString("es-AR",{dateStyle:"short",timeStyle:"short"})} · se actualiza sola cada hora`:`Todavía no se leyó la carpeta de Drive. Cargá el link de la carpeta en <b>Marca</b> y ejecutá <b>setupAvisos</b> en Apps Script.`}</p>
   <div class="filters" style="align-items:center">
     <input id="d_q" placeholder="Buscar por nombre…" value="${esc(dq)}" style="max-width:220px">
     <select id="d_folder" style="max-width:220px"><option value="">Todas las carpetas</option>${folders.map(f=>`<option ${f===dFolder?"selected":""}>${esc(f)}</option>`).join("")}</select>
