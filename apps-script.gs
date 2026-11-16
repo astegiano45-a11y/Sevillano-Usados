@@ -384,7 +384,7 @@ function syncDrive() {
     while (subs.hasNext()) { const s = subs.next(); walk(s, path + ' / ' + s.getName(), depth + 1); }
   };
   const root = DriveApp.getFolderById(m[1]);
-  walk(root, root.getName(), 0);
+  walk(root, root.getName().trim(), 0);
   const sh = sheet_('drive');
   if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, SHEETS.drive.length).clearContent();
   if (out.length) sh.getRange(2, 1, out.length, SHEETS.drive.length).setValues(out);
